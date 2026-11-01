@@ -476,7 +476,7 @@ Diğer (On* olmayan) MainFrame metotları: `AcceptDrop/DropFiles` (drag&drop), `
 #### TUNE-10 · Tablo/curve import — P1 · [O]
 - Seçili tabloyu `.vemscfg`, `.txt` (mcd), `.msq` dosyasından alma; diğer değerler yok sayılır.
 
-#### TUNE-11 · Table Compare 3D — P1 · [O]
+#### TUNE-11 · Table Compare 3D — P1 · [O] · [YAPILDI → `components/TableCompare3D.tsx`, spec `TABLE-COMPARE-3D.md`]
 - İki tabloyu 3D karşılaştırma: File 1 / File 2 / "Load from VT"; mod: File 1 + File2 / + Difference; "Show info", "Reset Display", load type seçimi, simülasyon kutusu. Sınıflar `TableCompare3D`, `TableCompare3DFrame`, `TableCompare3DGLCanvas`. Gauge tipi `table3dcompare`.
 
 #### TUNE-12 · Load trace / trail / autofollow — P0 · [O]

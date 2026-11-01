@@ -183,7 +183,7 @@ export default function App() {
   // ── shell: splash, command palette, shortcuts ─────────────────────────
   const [splash, setSplash] = useState(true);
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [tableReq, setTableReq] = useState<{ id: string }>();
+  const [tableReq, setTableReq] = useState<{ id: string; compare?: boolean }>();
   const [curveReq, setCurveReq] = useState<{ id: string }>();
   const showSplash = splash && !device && !replay;
 
@@ -238,6 +238,15 @@ export default function App() {
         label: t.title || t.id3d,
         run: () => {
           setTableReq({ id: t.id3d });
+          setTab('tables');
+        },
+      });
+      commands.push({
+        id: `compare:${t.id3d}`,
+        group: 'Karşılaştır 3D',
+        label: t.title || t.id3d,
+        run: () => {
+          setTableReq({ id: t.id3d, compare: true });
           setTab('tables');
         },
       });
@@ -363,7 +372,14 @@ export default function App() {
             />
           )}
           {tab === 'tables' && device && config && (
-            <TablesPanel client={device.client} config={config} feed={gaugeFeed} request={tableReq} />
+            <TablesPanel
+              client={device.client}
+              config={config}
+              feed={gaugeFeed}
+              request={tableReq}
+              sipr={sipr}
+              firmware={details?.version}
+            />
           )}
           {tab === 'curves' && device && config && (
             <CurvesPanel client={device.client} config={config} feed={gaugeFeed} request={curveReq} />

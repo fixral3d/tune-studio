@@ -559,3 +559,31 @@ label.button-like {
 .tlog-scope:focus { border-color: var(--accent); }
 .tlog-results { max-height: 340px; }
 .tlog-gap td { color: var(--accent2); }
+
+/* ── Table Compare 3D (TUNE-11) ─────────────────────────────────── */
+.tc { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.tc-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.tc-src { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+.tc-dot { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
+.tc-file { cursor: pointer; padding: 3px 9px; border: 1px dashed var(--line); border-radius: 6px; font-size: 12px; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tc-file:hover { border-color: var(--accent); color: var(--accent); }
+.tc-err { color: var(--danger); }
+.tc-ctl { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+.tc-warn { padding: 6px 10px; border-radius: 8px; background: rgba(255, 181, 71, .1); color: var(--accent2); border: 1px solid rgba(255, 181, 71, .3); }
+.tc-body { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: start; }
+@media (max-width: 1200px) { .tc-body { grid-template-columns: 1fr; } }
+.tc-3d { position: relative; margin-bottom: 0; }
+.tc-info { position: absolute; top: 10px; left: 10px; display: grid; grid-template-columns: auto auto; gap: 2px 12px; padding: 8px 12px; font-size: 12px; background: rgba(10, 14, 20, .78); backdrop-filter: blur(6px); border: 1px solid var(--line); border-radius: 10px; pointer-events: none; }
+.tc-info div { display: contents; }
+.tc-info span { color: var(--muted); }
+.tc-info b { font-variant-numeric: tabular-nums; text-align: right; }
+.tc-info b.pos { color: #ff6b78; }
+.tc-info b.neg { color: #6fa0ff; }
+.tc-grid-wrap { overflow: auto; max-width: 100%; }
+.tc-grid { border-collapse: separate; border-spacing: 2px; font-size: 11px; font-variant-numeric: tabular-nums; }
+.tc-grid th { color: var(--muted); font-weight: 500; padding: 0 4px; text-align: right; }
+.tc-grid tr:last-child th { text-align: center; }
+.tc-grid td { min-width: 34px; padding: 4px 2px; text-align: center; color: #0b0f15; font-weight: 600; border-radius: 4px; cursor: pointer; outline: 2px solid transparent; }
+.tc-grid td.same { opacity: .45; }
+.tc-grid td.on { outline-color: #fff; }
+.tc-cell { margin-top: 6px; color: var(--muted); }

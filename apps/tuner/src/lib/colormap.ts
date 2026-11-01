@@ -27,4 +27,17 @@ export function heatCss(t: number): string {
   return `rgb(${Math.round(r * 255)} ${Math.round(g * 255)} ${Math.round(b * 255)})`;
 }
 
+/** sign colour for differences: grey at 0, red for positive, blue for negative (|v| = m → full) */
+export function diverge(v: number, m: number): [number, number, number] {
+  const a = Number.isFinite(v) ? Math.min(1, Math.abs(v) / (m || 1)) : 0;
+  const to = v > 0 ? [1, 0.32, 0.38] : [0.27, 0.52, 1];
+  const base = [0.42, 0.47, 0.55];
+  return [0, 1, 2].map((k) => base[k]! + (to[k]! - base[k]!) * a) as [number, number, number];
+}
+
+export function divergeCss(v: number, m: number): string {
+  const [r, g, b] = diverge(v, m);
+  return `rgb(${Math.round(r * 255)} ${Math.round(g * 255)} ${Math.round(b * 255)})`;
+}
+
 export const HEAT_GRADIENT = `linear-gradient(90deg, ${STOPS.map(([p]) => `${heatCss(p)} ${p * 100}%`).join(', ')})`;

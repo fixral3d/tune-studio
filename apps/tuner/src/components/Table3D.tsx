@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { heat } from '../lib/colormap';
+import { diverge, heat } from '../lib/colormap';
 
 /** Inclusive cell rectangle (x = column/xBins index, y = row/yBins index). */
 export interface CellRect {
@@ -31,6 +31,17 @@ export interface Table3DProps {
   onHover(cell?: { x: number; y: number }): void;
   /** vertical drag on the selection: value delta, done=true on release */
   onDrag(delta: number, done: boolean): void;
+  /** second, translucent surface on the same scale (Table Compare 3D "File 2") */
+  ghost?: number[];
+  /** solid surface colour instead of the heat map */
+  tint?: string;
+  /** colour by sign (red > 0 > blue) and draw the zero plane — for difference tables */
+  diverging?: boolean;
+  /** with `diverging`: colour by these values (e.g. A−B) instead of the heights; no zero plane */
+  colorBy?: number[];
+  /** extra tooltip line for cell index y*xlen + x */
+  tipExtra?(i: number): string;
+  help?: string;
 }
 
 // world size of the table box
@@ -68,6 +79,20 @@ interface Scene3D {
 const px = (i: number, n: number) => -W / 2 + (i * W) / Math.max(1, n - 1);
 const pz = (j: number, n: number) => D / 2 - (j * D) / Math.max(1, n - 1);
 const norm = (v: number, lo: number, hi: number) => (hi === lo ? 0.5 : (v - lo) / (hi - lo));
+
+/** triangle + grid-line indices of an xlen×ylen vertex grid (vertex y*xlen + x) */
+function gridIndex(xlen: number, ylen: number) {
+  const tris: number[] = [];
+  const lines: number[] = [];
+  for (let y = 0; y < ylen; y++)
+    for (let x = 0; x < xlen; x++) {
+      const a = y * xlen + x;
+      if (x < xlen - 1) lines.push(a, a + 1);
+      if (y < ylen - 1) lines.push(a, a + xlen);
+      if (x < xlen - 1 && y < ylen - 1) tris.push(a, a + 1, a + xlen, a + 1, a + xlen + 1, a + xlen);
+    }
+  return { tris, lines };
+}
 
 function textSprite(text: string, size: number, color = '#9fb0c3', weight = 500): THREE.Sprite {
   const c = document.createElement('canvas');
@@ -347,7 +372,8 @@ export function Table3D(props: Table3DProps) {
     };
   }, []);
 
-  const { xlen, ylen, values, lo, hi, digits, xLabels, yLabels, xTitle, yTitle, zTitle, sel, live } = props;
+  const { xlen, ylen, values, lo, hi, digits, xLabels, yLabels, xTitle, yTitle, zTitle, sel, live, ghost, tint, diverging, colorBy } =
+    props;
 
   // surface + wireframe + floor heatmap: rebuilt when the table shape changes
   useEffect(() => {
@@ -363,15 +389,7 @@ export function Table3D(props: Table3DProps) {
         pos.array[i + 2] = flat[i + 2] = pz(y, ylen);
         flat[i + 1] = 0.005;
       }
-    const tris: number[] = [];
-    const lines: number[] = [];
-    for (let y = 0; y < ylen; y++)
-      for (let x = 0; x < xlen; x++) {
-        const a = y * xlen + x;
-        if (x < xlen - 1) lines.push(a, a + 1);
-        if (y < ylen - 1) lines.push(a, a + xlen);
-        if (x < xlen - 1 && y < ylen - 1) tris.push(a, a + 1, a + xlen, a + 1, a + xlen + 1, a + xlen);
-      }
+    const { tris, lines } = gridIndex(xlen, ylen);
 
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', pos);
@@ -429,10 +447,14 @@ export function Table3D(props: Table3DProps) {
     const pos = g.getAttribute('position') as THREE.BufferAttribute;
     const col = g.getAttribute('color') as THREE.BufferAttribute;
     const tmp = new THREE.Color();
+    const solid = tint ? new THREE.Color(tint) : undefined;
+    const m = colorBy ? Math.max(0, ...colorBy.map(Math.abs)) : Math.max(Math.abs(lo), Math.abs(hi));
     for (let i = 0; i < xlen * ylen; i++) {
-      const t = norm(values[i] ?? lo, lo, hi);
+      const v = values[i] ?? lo;
+      const t = norm(v, lo, hi);
       pos.setY(i, t * H);
-      tmp.setRGB(...heat(t), THREE.SRGBColorSpace);
+      if (solid) tmp.copy(solid);
+      else tmp.setRGB(...(diverging ? diverge(colorBy?.[i] ?? v, m) : heat(t)), THREE.SRGBColorSpace);
       col.setXYZ(i, tmp.r, tmp.g, tmp.b);
     }
     pos.needsUpdate = true;
@@ -440,7 +462,69 @@ export function Table3D(props: Table3DProps) {
     g.computeVertexNormals();
     g.computeBoundingSphere();
     g.computeBoundingBox();
-  }, [values, lo, hi, xlen, ylen]);
+  }, [values, lo, hi, xlen, ylen, tint, diverging, colorBy]);
+
+  // compare overlay: translucent second surface + zero plane for difference tables
+  useEffect(() => {
+    const s = st.current!;
+    const objs: THREE.Object3D[] = [];
+    if (ghost && ghost.length >= xlen * ylen) {
+      const pos = new Float32Array(xlen * ylen * 3);
+      for (let y = 0; y < ylen; y++)
+        for (let x = 0; x < xlen; x++) {
+          const i = y * xlen + x;
+          pos[i * 3] = px(x, xlen);
+          pos[i * 3 + 1] = norm(ghost[i]!, lo, hi) * H;
+          pos[i * 3 + 2] = pz(y, ylen);
+        }
+      const { tris, lines } = gridIndex(xlen, ylen);
+      const attr = new THREE.BufferAttribute(pos, 3);
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', attr);
+      g.setIndex(tris);
+      g.computeVertexNormals();
+      const wg = new THREE.BufferGeometry();
+      wg.setAttribute('position', attr);
+      wg.setIndex(lines);
+      objs.push(
+        new THREE.Mesh(
+          g,
+          new THREE.MeshStandardMaterial({
+            color: 0x3ee68a,
+            transparent: true,
+            opacity: 0.32,
+            roughness: 0.5,
+            side: THREE.DoubleSide,
+            depthWrite: false,
+          }),
+        ),
+        new THREE.LineSegments(wg, new THREE.LineBasicMaterial({ color: 0x5cffa8, transparent: true, opacity: 0.75 })),
+      );
+    }
+    if (diverging && !colorBy && lo < 0 && hi > 0) {
+      const h = norm(0, lo, hi) * H;
+      const plane = new THREE.Mesh(
+        new THREE.PlaneGeometry(W, D),
+        new THREE.MeshBasicMaterial({ color: 0x9fb0c3, transparent: true, opacity: 0.08, side: THREE.DoubleSide, depthWrite: false }),
+      );
+      plane.rotation.x = -Math.PI / 2;
+      plane.position.y = h;
+      const edge = new THREE.LineSegments(
+        new THREE.EdgesGeometry(plane.geometry),
+        new THREE.LineBasicMaterial({ color: 0x9fb0c3, transparent: true, opacity: 0.45 }),
+      );
+      edge.rotation.x = -Math.PI / 2;
+      edge.position.y = h;
+      objs.push(plane, edge);
+    }
+    if (objs.length) s.scene.add(...objs);
+    return () => {
+      for (const o of objs) {
+        s.scene.remove(o);
+        disposeTree(o);
+      }
+    };
+  }, [ghost, diverging, colorBy, lo, hi, xlen, ylen]);
 
   // selection markers
   useEffect(() => {
@@ -552,13 +636,15 @@ export function Table3D(props: Table3DProps) {
       {tip && tipValue !== undefined && (
         <div className="t3-tip" style={{ left: tip.left + 14, top: tip.top + 14 }}>
           <b>{tipValue.toFixed(digits)}</b>
+          {props.tipExtra && <span>{props.tipExtra(tip.y * xlen + tip.x)}</span>}
           <span>
             {xTitle} {xLabels[tip.x]} · {yTitle} {yLabels[tip.y]}
           </span>
         </div>
       )}
       <div className="t3-help">
-        Sürükle: döndür · Sağ tık: kaydır · Tekerlek: yakınlaş · Tık: seç · Shift+tık: alan · Seçimi dikey sürükle: değer
+        {props.help ??
+          'Sürükle: döndür · Sağ tık: kaydır · Tekerlek: yakınlaş · Tık: seç · Shift+tık: alan · Seçimi dikey sürükle: değer'}
       </div>
     </div>
   );

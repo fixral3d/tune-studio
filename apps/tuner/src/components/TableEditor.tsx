@@ -6,6 +6,7 @@ import {
   readArray,
   VemsClient,
   type ArrayField,
+  type SiprDescriptor,
   type TableDesc,
   type VemsConfig,
 } from '@vems/core';
@@ -14,6 +15,7 @@ import { Table3D, type CellRect } from './Table3D';
 import type { RtSource } from './GaugePanel';
 import { RealtimeFeed } from '../lib/realtime';
 import { usePageEditor, writeUserClamped } from '../lib/pageEditor';
+import { TableCompare3D } from './TableCompare3D';
 
 /** anchor (ax, ay) + focus (fx, fy); the selection is the rectangle between them */
 interface Sel {
@@ -567,12 +569,16 @@ export function TablesPanel({
   config,
   feed,
   request,
+  sipr,
+  firmware,
 }: {
   client: VemsClient;
   config: VemsConfig;
   feed?: RtSource;
   /** open this table (from the command palette); a new object re-triggers */
-  request?: { id: string };
+  request?: { id: string; compare?: boolean };
+  sipr?: SiprDescriptor;
+  firmware?: string;
 }) {
   const tables = useMemo(
     () =>
@@ -583,8 +589,12 @@ export function TablesPanel({
     [config],
   );
   const [id, setId] = useState(request?.id ?? tables[0]?.id3d ?? '');
+  const [compare, setCompare] = useState(!!request?.compare);
   useEffect(() => {
-    if (request) setId(request.id);
+    if (request) {
+      setId(request.id);
+      setCompare(!!request.compare);
+    }
   }, [request]);
   const table = config.tables.get(id) ?? tables[0];
 
@@ -601,8 +611,21 @@ export function TablesPanel({
             </option>
           ))}
         </select>
+        <div className="seg">
+          <button className={compare ? '' : 'on'} onClick={() => setCompare(false)}>
+            Düzenle
+          </button>
+          <button className={compare ? 'on' : ''} onClick={() => setCompare(true)} title="Table Compare 3D: iki tune'u üst üste">
+            Karşılaştır 3D
+          </button>
+        </div>
       </div>
-      {table && <TableEditor key={table.id3d} client={client} config={config} table={table} feed={feed} />}
+      {table &&
+        (compare ? (
+          <TableCompare3D key={table.id3d} client={client} config={config} table={table} sipr={sipr} firmware={firmware} />
+        ) : (
+          <TableEditor key={table.id3d} client={client} config={config} table={table} feed={feed} />
+        ))}
     </div>
   );
 }
