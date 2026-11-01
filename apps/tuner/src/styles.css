@@ -284,7 +284,7 @@ button.burn.warn-btn { background: rgba(210, 153, 34, .14); box-shadow: 0 0 18px
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } }
 
 /* ── cockpit ─────────────────────────────────────────────────────── */
-.cockpit { display: flex; flex-direction: column; gap: 16px; }
+.cockpit { display: flex; flex-direction: column; gap: 16px; max-width: 1180px; margin: 0 auto; width: 100%; }
 .cp-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .cp-bar .seg { margin-left: auto; }
 .cp-kicker { font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--accent); font-weight: 700; }
@@ -298,7 +298,9 @@ button.burn.warn-btn { background: rgba(210, 153, 34, .14); box-shadow: 0 0 18px
 }
 .cp-slot.hero { padding: 18px; box-shadow: 0 0 0 1px rgba(62, 230, 193, .08), 0 30px 80px rgba(0, 0, 0, .5), 0 0 120px rgba(62, 230, 193, .06); }
 .cp-slot.small { padding: 8px; }
-.agauge svg { display: block; width: 100%; height: auto; overflow: visible; }
+.agauge svg { display: block; width: 100%; height: auto; overflow: visible; margin: 0 auto; max-width: 170px; }
+.cp-slot.hero .agauge svg { max-width: 280px; }
+.cp-slot.small .agauge svg { max-width: 150px; }
 .agauge.danger svg { animation: danger 0.9s infinite; }
 @keyframes danger { 50% { filter: drop-shadow(0 0 14px rgba(255, 60, 60, .7)); } }
 .ag-tick { font-size: 10.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
