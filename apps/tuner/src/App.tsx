@@ -138,15 +138,34 @@ export default function App() {
   }
 
   async function connectSerial() {
+    // VemsTune's supported baud rates, preferred first.
+    const bauds = [19200, 115200, 57600, 9600];
+    const t = new WebSerialTransport();
     try {
-      const t = new WebSerialTransport(19200);
-      await t.open();
-      const client = new VemsClient(t);
-      client.start();
-      const d: Device = { client, transport: t, stop: () => { client.stop(); void t.close(); } };
-      setDevice(d);
-      setDetails(await client.readDetails());
+      await t.open(bauds[0]!); // prompts for the port once, opens + asserts DTR
     } catch (e) {
+      setErr(String(e));
+      return;
+    }
+    try {
+      for (let i = 0; i < bauds.length; i++) {
+        if (i > 0) await t.reopen(bauds[i]!);
+        const client = new VemsClient(t);
+        client.start();
+        try {
+          const details = await client.readDetails(); // probes the ECU at this baud
+          const d: Device = { client, transport: t, stop: () => { client.stop(); void t.close(); } };
+          setDevice(d);
+          setDetails(details);
+          return;
+        } catch {
+          client.stop(); // wrong baud / no reply — detach and try the next
+        }
+      }
+      await t.close();
+      setErr('ECU bulunamadı (19200/115200/57600/9600 denendi). Kabloyu ve baud ayarını kontrol et.');
+    } catch (e) {
+      await t.close();
       setErr(String(e));
     }
   }

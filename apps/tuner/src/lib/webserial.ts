@@ -13,13 +13,35 @@ export class WebSerialTransport implements SerialTransport {
     return this._open;
   }
 
-  async open(): Promise<void> {
+  /** Prompt for a port (once) and open it at `baud` (defaults to the ctor baud). */
+  async open(baud = this.baudRate): Promise<void> {
     if (!('serial' in navigator)) throw new Error('WebSerial not supported in this browser');
     this.port = await navigator.serial.requestPort();
-    await this.port.open({ baudRate: this.baudRate });
+    await this.openPort(baud);
+  }
+
+  /** Reopen the already-selected port at a new baud (used for baud auto-detect). */
+  async reopen(baud: number): Promise<void> {
+    if (!this.port) throw new Error('port not selected');
+    await this.closePort();
+    await this.openPort(baud);
+  }
+
+  private async openPort(baud: number): Promise<void> {
+    this.baudRate = baud;
+    await this.port!.open({ baudRate: baud });
+    // Assert DTR/RTS — VemsTune raises DTR on connect; some FTDI cables need it.
+    const sp = this.port! as SerialPort & {
+      setSignals?: (s: { dataTerminalReady?: boolean; requestToSend?: boolean }) => Promise<void>;
+    };
+    try {
+      await sp.setSignals?.({ dataTerminalReady: true, requestToSend: true });
+    } catch {
+      /* not all platforms expose setSignals */
+    }
     this._open = true;
-    this.writer = this.port.writable!.getWriter();
-    this.reader = this.port.readable!.getReader();
+    this.writer = this.port!.writable!.getWriter();
+    this.reader = this.port!.readable!.getReader();
     void this.readLoop();
   }
 
@@ -35,7 +57,8 @@ export class WebSerialTransport implements SerialTransport {
     }
   }
 
-  async close(): Promise<void> {
+  /** Tear down streams and close the port, but keep the selected `port` for reopen. */
+  private async closePort(): Promise<void> {
     this._open = false;
     try {
       await this.reader?.cancel();
@@ -45,6 +68,13 @@ export class WebSerialTransport implements SerialTransport {
     } catch {
       /* ignore */
     }
+    this.reader = undefined;
+    this.writer = undefined;
+  }
+
+  async close(): Promise<void> {
+    await this.closePort();
+    this.port = undefined;
   }
 
   async write(data: Uint8Array): Promise<void> {
@@ -52,8 +82,7 @@ export class WebSerialTransport implements SerialTransport {
   }
 
   async setBaudRate(baud: number): Promise<void> {
-    this.baudRate = baud;
-    // WebSerial needs reopen to change baud; left to caller.
+    await this.reopen(baud);
   }
 
   onData(cb: (data: Uint8Array) => void): () => void {
