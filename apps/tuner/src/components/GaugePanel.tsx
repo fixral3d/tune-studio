@@ -80,13 +80,15 @@ export function GaugePanel({ feed, config }: { feed: RtSource; config: VemsConfi
         </button>
         {editing === i && (
           <div className="cp-pop">
-            <select size={10} value={g.name} onChange={(e) => choose(i, e.target.value)}>
-              {db.gauges.map((d) => (
-                <option key={d.name} value={d.name}>
-                  {gaugeTitle(d)} · {d.channel} ({d.lo}…{d.hi})
-                </option>
-              ))}
-            </select>
+            {db.gauges.map((d) => (
+              <button
+                key={d.name}
+                className={`cp-pop-item${d.name === g.name ? ' on' : ''}`}
+                onClick={() => choose(i, d.name)}
+              >
+                {gaugeTitle(d)} · {d.channel} ({d.lo}…{d.hi})
+              </button>
+            ))}
           </div>
         )}
       </div>
