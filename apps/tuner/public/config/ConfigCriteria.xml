@@ -1,0 +1,1308 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ConfigCriteria>
+	<Variables>
+		<Item key="loadmult" ><![CDATA[ ( config13 & 4 ) >> 2 ]]></Item>
+		<Item key="kpa_range"><![CDATA[ ( kpa_conf & 3 ) ]]></Item>
+		<Item key="h2_0" ><![CDATA[ (( h2[0] >> 3) & 15) ]]></Item>
+		<Item key="h2_1" ><![CDATA[ (( h2[1] >> 3) & 15) ]]></Item>
+		<Item key="h2_2" ><![CDATA[ (( h2[2] >> 3) & 15) ]]></Item>
+		<Item key="h2_3" ><![CDATA[ (( h2[3] >> 3) & 15) ]]></Item>
+		<Item key="h2_4" ><![CDATA[ (( h2[4] >> 3) & 15) ]]></Item>
+		<Item key="h2_5" ><![CDATA[ (( h2[5] >> 3) & 15) ]]></Item>
+		<Item key="h2_6" ><![CDATA[ (( h2[6] >> 3) & 15) ]]></Item>
+		<Item key="h2_7" ><![CDATA[ (( h2[7] >> 3) & 15) ]]></Item>
+		<!-- <Item key="cs_type"><![CDATA[ ( confswitch >> 3) ]]> </Item> -->
+		
+		<Item key="tooth_wheel_twidth_Deg"><![CDATA[ (256 * tooth_wheel_twidth[0] + tooth_wheel_twidth[1]) / 4 ]]></Item>	
+		<Item key="isMissingTooth" ><![CDATA[ ((( primary_trigger & 2) >> 1) == 0) ]]></Item>
+		<Item key="isCoilType" ><![CDATA[ ((( primary_trigger & 2) >> 1) == 1) ]]></Item>
+		<Item key="isN1" ><![CDATA[ ((( primary_trigger & 16)  >> 4) == 1) ]]></Item>
+		<Item key="isN2" ><![CDATA[ (( primary_trigger & 16)  >> 4) == 0 ]]></Item>
+		<Item key="isTriggerTypeNormal" ><![CDATA[ (( primary_trigger & (32 + 64 + 128)  )  >> 5) == 0 ]]></Item>
+		<Item key="isTriggerTypeAudiDivby3" ><![CDATA[ (  primary_trigger & (32 + 64 + 128)  ) == 64 ]]></Item>
+		
+		<Item key="isIACStepper"><![CDATA[ (iac_conf >> 2) & 1 ]]></Item>
+		
+		<Item key="is_hall_dirac_filter_sec" ><![CDATA[ (config12 >> 6) & 1 ]]></Item>
+		<Item key="is_hall_dirac_filter_pri" ><![CDATA[ (config12 >> 7) & 1 ]]></Item>
+		<Item key="NCYL" ><![CDATA[ ((config11 / 16) & 15) + 1]]></Item>
+		<!-- <Item key="isConfigSwitchValid"><![CDATA[ (cs_type == 0) || (cs_type == 16) || (cs_type == 18) || (cs_type == 24) || (cs_type == 26)]]></Item>	 -->
+		<Item key="elise_trigger"><![CDATA[ ( ((! isCoilType) && ( ! isN2 ) && (tooth_wheel == 32) ) ?  3 : 0 ) ]]></Item>	
+		<Item key="totaltooth"><![CDATA[ ( elise_trigger + tooth_wheel + ( (! isCoilType) ? (isN2 + 1) : 0 )) ]]></Item>	
+		<Item key="isExtraPulseTrigger"><![CDATA[ ( strig_validation & 8 ) == 8 ]]></Item>
+		<Item key="isNissanSecTrigger"><![CDATA[ ( strig_validation & 4 ) == 4 ]]></Item>
+		<Item key="isThirdTrigger"><![CDATA[ ( vvti_cold & 8 ) == 8 ]]></Item>
+		<Item key="isSubaru"><![CDATA[ ( primary_trigger & ( 128 + 32 + 2 ) ) == ( 128 + 32 + 2 ) ]]></Item>
+
+		<Item key="injAlternate"><![CDATA[ ( alternate & 7 ) ]]></Item>	
+  
+	</Variables>
+
+	<Validate>       
+		<Rule key="loadmult" warningMsg="Please check: loadmult and hybrid_rpm_m!" maxfw="1.1.76">
+			<Item type="ok"><![CDATA[ (loadmult == 0) & (hybrid_rpm_m > 0) ]]></Item>
+			<Item type="warning"><![CDATA[ (loadmult == 1) & (hybrid_rpm_m == 0) ]]></Item>
+			<ErrorDetail><![CDATA[Check:<br>
+				"MAP (Load) multiplication" in Menu: <a href="constants">"Settings/Constants"</a> and <br>
+				"Min RPM for Speed Density" in Menu: <a href="blending">Extras/"Alpha-N / Speed-Density Blending"</a>
+			 ]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="trigger_tooth" warningMsg="Check first trigger tooth">
+			<Item type="warning"><![CDATA[ ( isMissingTooth && isN2 && ( trigger_tooth > (another_trigger_tooth - 3) ) )]]></Item>
+			<Item type="warning"><![CDATA[ ( isMissingTooth && isN1 && ( trigger_tooth > (another_trigger_tooth - 2) ) )]]></Item>
+			<Item type="warning"><![CDATA[ ( isCoilType && ( trigger_tooth > ( another_trigger_tooth - 1 ) ) ) ]]></Item>
+						
+			<ErrorDetail><![CDATA[Check first trigger tooth! It should be less than or equal to <ul>
+				<li>Next trigger tooth - 3 if "Trigger type" = "Missingtooth" and "Missing tooth type" = "N-2"
+				<li>Next trigger tooth - 2 if "Trigger type" = "Missingtooth" and "Missing tooth type" = "N-1"
+				<li>Next trigger tooth - 1 if "Trigger type" = "Coil-type"
+				</ul> ]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="wbo2_pump_pw_zero" warningMsg="wbo2_pump_pw_zero typical value should be between 95 and 106!">
+			<Item type="warning"><![CDATA[ wbo2_pump_pw_zero < 95 ]]></Item>
+			<Item type="warning"><![CDATA[ wbo2_pump_pw_zero > 106 ]]></Item>
+			<ErrorDetail><![CDATA[ wbo2_pump_pw_zero typical value should be between 95 and 106 <br> $MENU_LINK </a> ]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="wbo2_nernstdc_target" warningMsg="wbo2_nernstdc_target typical value should be between 128 and 140!">
+			<Item type="warning"><![CDATA[ wbo2_nernstdc_target < 128 ]]></Item>
+			<Item type="warning"><![CDATA[ wbo2_nernstdc_target > 140 ]]></Item>
+			<ErrorDetail><![CDATA[ wbo2_nernstdc_target typical value should be between 128 and 140 <br> $MENU_LINK </a> ]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="wbo2_pump_pw_zero2" warningMsg="wbo2_pump_pw_zero2 typical value should be between 95 and 106!">
+			<Item type="warning"><![CDATA[ (wbo2_pump_pw_zero2 < 95) && ((config11 & 4) == 4)]]></Item>
+			<Item type="warning"><![CDATA[ (wbo2_pump_pw_zero2 > 106) && ((config11 & 4) == 4)]]></Item>
+			<ErrorDetail><![CDATA[ wbo2_pump_pw_zero2 typical value should be between 95 and 106 <br> $MENU_LINK </a> ]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="wbo2_nernstdc_target2" warningMsg="wbo2_nernstdc_target2 typical value should be between 128 and 140!">
+			<Item type="warning"><![CDATA[ (wbo2_nernstdc_target2 < 128) && ((config11 & 4) == 4)]]></Item>
+			<Item type="warning"><![CDATA[ (wbo2_nernstdc_target2 > 140) && ((config11 & 4) == 4)]]></Item>
+			<ErrorDetail><![CDATA[ wbo2_nernstdc_target2 typical value should be between 128 and 140 <br> $MENU_LINK </a> ]]>
+			</ErrorDetail>
+		</Rule>
+
+		
+		<Rule key="egoCorrection" warningMsg="Ego Rich limit should be less then 15 and Lean limit should be less then 25">
+			<Item type="warning"><![CDATA[ ego_rich_limit > (15 * 255 / 100 ) ]]></Item>
+			<Item type="warning"><![CDATA[ ego_lean_limit > (25 * 255 / 100 ) ]]></Item>
+			<ErrorDetail><![CDATA[ Ego Rich limit should be less then 15 and Lean limit should be less then 25. <br> $MENU_LINK </a> ]]>
+			</ErrorDetail>
+		</Rule>
+
+<!-- 		<Rule key="Two stroke configured" errorMsg="Do not use two stroke configuration">
+			<Item type="error"><![CDATA[ (config11 & 4) == 4 ]]></Item>
+			<ErrorDetail><![CDATA[ Two stroke is Obsolete, multiply cilinder number by two and use wasted spark <br> 
+				Example can find <A HREF="http://www.vems.hu/wiki/index.php?page=MembersPage%2FThreeCylTwoStroke" target="web">here</A> </p><br>
+				Can disable in:<a href="constants">Base setup/Engine Setup menu"</a>]]>
+			</ErrorDetail>
+		</Rule> 
+		
+		two stroke bit has been reassigned to wbo2 both channels, this criteria has gone obsolete - DB
+		-->
+		
+		<Rule key="batt_cal" warningMsg="batt_cal typical value should be between 176 and 200!">
+			<Item type="warning"><![CDATA[ batt_cal < 176 ]]></Item>
+			<Item type="warning"><![CDATA[ batt_cal > 200 ]]></Item>
+			<ErrorDetail><![CDATA[ batt_cal typical value should be between 176 and 200 <br> $MENU_LINK </a> ]]>
+			</ErrorDetail>
+		</Rule>
+		
+		
+		<Rule key="inj_dead_time " warningMsg="Injector dead time too high!">
+			<Item type="warning"><![CDATA[ ((config11 & 2) == 2) && inj_deadtime[4] > 53 ]]></Item>
+			<Item type="warning"><![CDATA[ ((config11 & 2) == 2) && inj_deadtime[3] > 63 ]]></Item>
+			<Item type="warning"><![CDATA[ ((config11 & 2) == 2) && inj_deadtime[2] > 81 ]]></Item>
+			<Item type="warning"><![CDATA[ ((config11 & 2) == 2) && inj_deadtime[1] > 112 ]]></Item>
+			<Item type="warning"><![CDATA[ ((config11 & 2) == 2) && inj_deadtime[0] > 166 ]]></Item>
+			<ErrorDetail><![CDATA[ Injector dead time too high!, check help for correct settings <br> $MENU_LINK </a> ]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="egt1_cal" errorMsg="egt1_cal typical value should be between 74 and 80!" 
+			 warningMsg="egt1_cal typical value should be between 70 and 85">
+			<Item type="ok"><![CDATA[ (egt1_cal >= 70) & (egt1_cal <= 85) ]]></Item>
+			<Item type="warning"><![CDATA[ (egt1_cal > 85) & (egt1_cal <= 95) ]]></Item>
+			<Item type="warning"><![CDATA[ (egt1_cal >= 65) & (egt1_cal < 70) ]]></Item>
+			<Item type="error"><![CDATA[ (egt1_cal < 65) | (egt1_cal > 95) ]]></Item>
+			<ErrorDetail><![CDATA[ egt1_cal typical value should be between 70 and 85.<br> $MENU_LINK </a>
+			 ]]>
+			</ErrorDetail>
+		</Rule>
+
+		<Rule key="Cranking enrichment order" errorMsg="Cranking enrichment must be in strictly monotonous descending order!">
+			<Item type="error"><![CDATA[ (crankpw[1] >= crankpw[0]) ]]></Item>
+			<Item type="error"><![CDATA[ (crankpw[2] >= crankpw[1]) ]]></Item>
+			<Item type="error"><![CDATA[ (crankpw[3] >= crankpw[2]) ]]></Item>
+			<Item type="error"><![CDATA[ (crankpw[4] >= crankpw[3]) ]]></Item>
+			<Item type="error"><![CDATA[ (crankpw[5] >= crankpw[4]) ]]></Item>
+			<Item type="error"><![CDATA[ (crankpw[6] >= crankpw[5]) ]]></Item>
+			<Item type="error"><![CDATA[ (crankpw[7] >= crankpw[6]) ]]></Item>
+			<Item type="error"><![CDATA[ (crankpw[8] >= crankpw[7]) ]]></Item>
+			<Item type="error"><![CDATA[ (crankpw[9] >= crankpw[8]) ]]></Item>
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[ <b>Cranking & Afterstart fuel Curve header value(s) (PulseWidth)</b> must be in monotonous ascending order!<br>
+				Please check it in Menu: <a href="CrankPulsewidth">Starting/Idle/"Cranking & Afterstart fuel Curve"</a> ]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="Cranking enrichment value" errorMsg="Cranking enrichment must less than 1500">
+			<Item type="error"><![CDATA[ (crank_enrich[0] > 224) ]]></Item>
+			<Item type="error"><![CDATA[ (crank_enrich[1] > 224) ]]></Item>
+			<Item type="error"><![CDATA[ (crank_enrich[2] > 224) ]]></Item>
+			<Item type="error"><![CDATA[ (crank_enrich[3] > 224) ]]></Item>
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[ <b>Cranking enrichment value(s) </b> must less than 1500<br>
+				Please check it in Menu: <a href="CrankEnrich">Cranking Enrichment Curve</a> ]]>
+			</ErrorDetail>
+		</Rule>
+		<Rule key="Afterstart enrichment value" errorMsg="Afterstart enrichment must less than 1500">
+			<Item type="error"><![CDATA[ (afterstart_enrich[0] > 224) ]]></Item>
+			<Item type="error"><![CDATA[ (afterstart_enrich[1] > 224) ]]></Item>
+			<Item type="error"><![CDATA[ (afterstart_enrich[2] > 224) ]]></Item>
+			<Item type="error"><![CDATA[ (afterstart_enrich[3] > 224) ]]></Item>
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[ <b>Afterstart enrichment value(s) </b> must less than 1500<br>
+				Please check it in Menu: <a href="AfterStartEnrich">Afterstart Enrichment Curve</a> ]]>
+			</ErrorDetail>
+		</Rule>
+		<Rule key="Afterstart enrichment value" warningMsg="Afterstart enrichment is too high">
+			<Item type="warning"><![CDATA[ (afterstart_enrich[0] > 128) ]]></Item>
+			<Item type="warning"><![CDATA[ (afterstart_enrich[1] > 128) ]]></Item>
+			<Item type="warning"><![CDATA[ (afterstart_enrich[2] > 128) ]]></Item>
+			<Item type="warning"><![CDATA[ (afterstart_enrich[3] > 128) ]]></Item>
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[ <b>Afterstart enrichment value(s) </b> too high<br>
+				Please check it in Menu: <a href="AfterStartEnrich">Afterstart Enrichment Curve</a> ]]>
+			</ErrorDetail>
+		</Rule>
+
+		<Rule key="Accel Enrich dTPS value" errorMsg="Acceleration enrichment dTPS[0] is too low" minfw="1.1.43" maxfw="1.2.19">
+			<Item type="error"><![CDATA[ (tpsdotrate[0] < 2) ]]></Item>
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[ <b>Acceleration enrichment dTPS[0] value </b> is too low<br><br>
+				Please check it in Menu: <a href="AccelEnrichCurve3">Acceleration dTPS/dMAP Enrichment</a> ]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="Accel. Enrich dTPS/dMap value" errorMsg="Acceleration enrichment dTPS[0] is too low" minfw="1.2.20">
+			<Item type="error"><![CDATA[ (tpsdotrate[0] < 5) ]]></Item>
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[ <b>Acceleration enrichment dTPS[0] value </b> is too low<br><br>
+				Please check it in Menu: <a href="AccelEnrichCurve3">Acceleration dTPS/dMAP Enrichment</a>. <b>The minimum recommended value for the first dTPS/dMAP bin is 5</b>. ]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="Accel. Enrich dTPS/dMap bin order" errorMsg="Acceleration enrichment dTPS/dMap bins must be in strictly monotonous ascending order!">
+			<Item type="error"><![CDATA[ (tpsdotrate[0] >= tpsdotrate[1]) ]]></Item>
+			<Item type="error"><![CDATA[ (tpsdotrate[1] >= tpsdotrate[2]) ]]></Item>
+			<Item type="error"><![CDATA[ (tpsdotrate[2] >= tpsdotrate[3]) ]]></Item>
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[ <b>Acceleration enrichment bin order header value(s) (dTPS/dMap)</b> must be in monotonous ascending order!<br><br>
+				Please check it in Menu: <a href="AccelEnrichCurve3">Acceleration dTPS/dMAP Enrichment</a> ]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="Accel. Enrich RPM bin order" errorMsg="Acceleration enrichment RPM bins must be in strictly monotonous ascending order!">
+			<Item type="error"><![CDATA[ (accel_rpm[0] >= accel_rpm[1]) ]]></Item>
+			<Item type="error"><![CDATA[ (accel_rpm[1] >= accel_rpm[2]) ]]></Item>
+			<Item type="error"><![CDATA[ (accel_rpm[2] >= accel_rpm[3]) ]]></Item>
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[ <b>Acceleration enrichment bin order header value(s) (RPM)</b> must be in monotonous ascending order!<br><br>
+				Please check it in Menu: <a href="AccelEnrichCurve2">Acceleration RPM Enrichment</a> ]]>
+			</ErrorDetail>
+		</Rule>
+	
+		
+		<Rule key="speed2_sensor = 1 is used " warningMsg="speed2_sensor = 1 is used for sectrig position measurement" minfw="1.2.5">
+			<Item type="warning"><![CDATA[ ((speed2_sensor == 1) && (secondary_trigger > 0) &&((secondary_trigger & 64) == 0 )) ]]></Item>-->
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[ <b>"speed2_sensor = 1" </b> means 4th trigger (wheelspeed2 input) is used for sectrig position measurement.<br>
+				Normally only used by subaru, but subarutrigger is not enabled in sectrig settings.<br>
+				Please check it in Menu: <a href="speedsensor">Speed Sensor</a> ]]>
+			</ErrorDetail>
+		</Rule>		
+		
+		<Rule key="Coolant bin order" errorMsg="Coolant bin must be in strictly monotonous ascending order!">
+			<Item type="error"><![CDATA[ (clt_range[0] >= clt_range[1]) ]]></Item>
+			<Item type="error"><![CDATA[ (clt_range[1] >= clt_range[2]) ]]></Item>
+			<Item type="error"><![CDATA[ (clt_range[2] >= clt_range[3]) ]]></Item>
+			<Item type="error"><![CDATA[ (clt_range[3] >= clt_range[4]) ]]></Item>
+			<Item type="error"><![CDATA[ (clt_range[4] >= clt_range[5]) ]]></Item>
+			<Item type="error"><![CDATA[ (clt_range[5] >= clt_range[6]) ]]></Item>
+			<Item type="error"><![CDATA[ (clt_range[6] >= clt_range[7]) ]]></Item>
+			<Item type="error"><![CDATA[ (clt_range[7] >= clt_range[8]) ]]></Item>
+			<Item type="error"><![CDATA[ (clt_range[8] >= clt_range[9]) ]]></Item>
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[ <b>Coolant bin order header value(s) (Coolant Temp)</b> must be in monotonous ascending order!<br>
+				Please check it in Menu: <a href="WarmUpEnrichment">Starting/Idle/"Warm-Up Enrichment Curve"</a> ]]>
+			</ErrorDetail>
+		</Rule>
+	
+		<Rule key="Coolant last enrich" warningMsg="Coolant last enrichment!">
+			<Item type="warning"><![CDATA[ ((warmup_clt[9] +256) *100 / 256 >= 110)  ]]></Item>
+			
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[ <b>Coolant last (at the highest temp.) enrichment should be less then 110%!</b><br>
+				Please check it in Menu: <a href="WarmUpEnrichment">Starting/Idle/"Warm-Up Enrichment Curve"</a> ]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<!-- Table header rules-->
+		<Rule key="Table header order" errorMsg="VE table RPM header (j[r]): must be in strictly monotonous ascending order!"> 
+			<Item type="error"><![CDATA[ (j_r[0] > j_r[1]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_r[1] > j_r[2]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_r[2] > j_r[3]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_r[3] > j_r[4]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_r[4] > j_r[5]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_r[5] > j_r[6]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_r[6] > j_r[7]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_r[7] > j_r[8]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_r[8] > j_r[9]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_r[9] > j_r[10]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_r[10] > j_r[11]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_r[11] > j_r[12]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_r[12] > j_r[13]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_r[13] > j_r[14]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_r[14] > j_r[15]) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[<b>VE table RPM header</b> must be in monotonous ascending order!<br><br>
+				Please check it in Menu: <a href="veTable">Tuning / "VE table"</a>]]>
+			</ErrorDetail>
+		</Rule>
+		<Rule key="Table header order" errorMsg="VE table KPA header (j[k]): must be in strictly monotonous ascending order!"> 
+			<Item type="error"><![CDATA[ (j_k[0] > j_k[1]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_k[1] > j_k[2]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_k[2] > j_k[3]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_k[3] > j_k[4]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_k[4] > j_k[5]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_k[5] > j_k[6]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_k[6] > j_k[7]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_k[7] > j_k[8]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_k[8] > j_k[9]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_k[9] > j_k[10]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_k[10] > j_k[11]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_k[11] > j_k[12]) ]]></Item> 
+			<Item type="error"><![CDATA[ (j_k[12] > j_k[13]) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[<b>VE table KPA header</b> must be in monotonous ascending order!<br><br>
+				Please check it in Menu: <a href="veTable">Tuning / "VE table"</a>]]>
+			</ErrorDetail>
+		</Rule>
+		<Rule key="Table header order" errorMsg="Spark table RPM header (n[r]): must be in stritcly monotonous ascending order!"> 
+			<Item type="error"><![CDATA[ (n_r[0] > n_r[1])  ]]></Item> 
+			<Item type="error"><![CDATA[ (n_r[1] > n_r[2]) ]]></Item> 
+			<Item type="error"><![CDATA[ (n_r[2] > n_r[3]) ]]></Item> 
+			<Item type="error"><![CDATA[ (n_r[3] > n_r[4]) ]]></Item> 
+			<Item type="error"><![CDATA[ (n_r[4] > n_r[5]) ]]></Item> 
+			<Item type="error"><![CDATA[ (n_r[5] > n_r[6]) ]]></Item> 
+			<Item type="error"><![CDATA[ (n_r[6] > n_r[7]) ]]></Item> 
+			<Item type="error"><![CDATA[ (n_r[7] > n_r[8]) ]]></Item> 
+			<Item type="error"><![CDATA[ (n_r[8] > n_r[9]) ]]></Item> 
+			<Item type="error"><![CDATA[ (n_r[9] > n_r[10]) ]]></Item> 
+			<Item type="error"><![CDATA[ (n_r[10] > n_r[11]) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[<b>Spark table RPM header</b> must be in monotonous ascending order!<br><br>
+				Please check it in Menu: <a href="sparkTbl">Tuning / "Spark table"</a>]]>
+			</ErrorDetail>
+		</Rule>
+		<Rule key="Table header order" errorMsg="Spark table KPA header (n[k]): must be in strictly monotonous ascending order!"> 
+			<Item type="error"><![CDATA[ (n_k[0] > n_k[1]) ]]></Item> 
+			<Item type="error"><![CDATA[ (n_k[1] > n_k[2]) ]]></Item> 
+			<Item type="error"><![CDATA[ (n_k[2] > n_k[3]) ]]></Item> 
+			<Item type="error"><![CDATA[ (n_k[3] > n_k[4]) ]]></Item> 
+			<Item type="error"><![CDATA[ (n_k[4] > n_k[5]) ]]></Item> 
+			<Item type="error"><![CDATA[ (n_k[5] > n_k[6]) ]]></Item> 
+			<Item type="error"><![CDATA[ (n_k[6] > n_k[7]) ]]></Item> 
+			<Item type="error"><![CDATA[ (n_k[7] > n_k[8]) ]]></Item> 
+			<Item type="error"><![CDATA[ (n_k[8] > n_k[9]) ]]></Item> 
+			<Item type="error"><![CDATA[ (n_k[9] > n_k[10]) ]]></Item> 
+			<Item type="error"><![CDATA[ (n_k[10] > n_k[11]) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[<b>Spark table KPA header</b> must be in monotonous ascending order!<br><br>
+				Please check it in Menu: <a href="sparkTbl">Tuning / "Spark table"</a>]]>
+			</ErrorDetail>
+		</Rule>
+				
+		<Rule key="Table header order" errorMsg="Lambda table RPM header (l[r]): must be in strictly monotonous ascending order!"> 
+			<Item type="error"><![CDATA[ (l_r[0] > l_r[1]) ]]></Item> 
+			<Item type="error"><![CDATA[ (l_r[1] > l_r[2]) ]]></Item> 
+			<Item type="error"><![CDATA[ (l_r[2] > l_r[3]) ]]></Item> 
+			<Item type="error"><![CDATA[ (l_r[3] > l_r[4]) ]]></Item> 
+			<Item type="error"><![CDATA[ (l_r[4] > l_r[5]) ]]></Item> 
+			<Item type="error"><![CDATA[ (l_r[5] > l_r[6]) ]]></Item> 
+			<Item type="error"><![CDATA[ (l_r[6] > l_r[7]) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[<b>Lambda table RPM header</b> must be in monotonous ascending order!<br><br>
+				Please check it in Menu: <a href="lambdaTbl">Tuning / "Lambda table"</a>]]>
+			</ErrorDetail>
+		</Rule>
+		<Rule key="Table header order" errorMsg="Lambda table KPA header (l[k]): must be in strictly monotonous ascending order!"> 
+			<Item type="error"><![CDATA[ (l_k[0] > l_k[1]) ]]></Item> 
+			<Item type="error"><![CDATA[ (l_k[1] > l_k[2]) ]]></Item> 
+			<Item type="error"><![CDATA[ (l_k[2] > l_k[3]) ]]></Item> 
+			<Item type="error"><![CDATA[ (l_k[3] > l_k[4]) ]]></Item> 
+			<Item type="error"><![CDATA[ (l_k[4] > l_k[5]) ]]></Item> 
+			<Item type="error"><![CDATA[ (l_k[5] > l_k[6]) ]]></Item> 
+			<Item type="error"><![CDATA[ (l_k[6] > l_k[7]) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[<b>Lambda table KPA header</b> must be in monotonous ascending order!<br><br>
+				Please check it in Menu: <a href="lambdaTbl">Tuning / "Lambda table"</a>]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="Table header order" errorMsg="MAT/TPS fuel enrichment table MAT header (e[r]): must be in strictly monotonous ascending order!"> 
+			<Item type="error"><![CDATA[ (e_r[0] > e_r[1]) ]]></Item> 
+			<Item type="error"><![CDATA[ (e_r[1] > e_r[2]) ]]></Item> 
+			<Item type="error"><![CDATA[ (e_r[2] > e_r[3]) ]]></Item> 
+			<Item type="error"><![CDATA[ (e_r[3] > e_r[4]) ]]></Item> 
+			<Item type="error"><![CDATA[ (e_r[4] > e_r[5]) ]]></Item> 
+			<Item type="error"><![CDATA[ (e_r[5] > e_r[6]) ]]></Item> 
+			<Item type="error"><![CDATA[ (e_r[6] > e_r[7]) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[<b>MAT/TPS fuel enrichment table MAT header</b> must be in monotonous ascending order!<br><br>
+				Please check it in Menu: <a href="matTbl">Tuning / "MAT/TPS fuel enrichment"</a>]]>
+			</ErrorDetail>
+		</Rule>
+		<Rule key="Table header order" errorMsg="MAT/TPS fuel enrichment table TPS header (e[k]): must be in strictly monotonous ascending order!"> 
+			<Item type="error"><![CDATA[ (e_k[0] > e_k[1]) ]]></Item> 
+			<Item type="error"><![CDATA[ (e_k[1] > e_k[2]) ]]></Item> 
+			<Item type="error"><![CDATA[ (e_k[2] > e_k[3]) ]]></Item> 
+			<Item type="error"><![CDATA[ (e_k[3] > e_k[4]) ]]></Item> 
+			<Item type="error"><![CDATA[ (e_k[4] > e_k[5]) ]]></Item> 
+			<Item type="error"><![CDATA[ (e_k[5] > e_k[6]) ]]></Item> 
+			<Item type="error"><![CDATA[ (e_k[6] > e_k[7]) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[<b>MAT/TPS fuel enrichment table TPS header</b> must be in monotonous ascending order!<br><br>
+				Please check it in Menu: <a href="matTbl">Tuning / "MAT/TPS fuel enrichment"</a>]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="Table header order" errorMsg="RPM/MAP Corr. table RPM header (i[r]): must be in strictly monotonous ascending order!"> 
+			<Item type="error"><![CDATA[ (i_r[0] > i_r[1]) ]]></Item> 
+			<Item type="error"><![CDATA[ (i_r[1] > i_r[2]) ]]></Item> 
+			<Item type="error"><![CDATA[ (i_r[2] > i_r[3]) ]]></Item> 
+			<Item type="error"><![CDATA[ (i_r[3] > i_r[4]) ]]></Item> 
+			<Item type="error"><![CDATA[ (i_r[4] > i_r[5]) ]]></Item> 
+			<Item type="error"><![CDATA[ (i_r[5] > i_r[6]) ]]></Item> 
+			<Item type="error"><![CDATA[ (i_r[6] > i_r[7]) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[<b>RPM/MAP Corr. table RPM header</b> must be in monotonous ascending order!<br><br>
+				Please check it in Menu: <a href="mapCorrTbl">Tuning / "RPM/MAP Corr."</a>]]>
+			</ErrorDetail>
+		</Rule>
+		<Rule key="Table header order" errorMsg="RPM/MAP Corr. table MAP header (i[k]): must be in strictly monotonous ascending order!"> 
+			<Item type="error"><![CDATA[ (i_k[0] > i_k[1]) ]]></Item> 
+			<Item type="error"><![CDATA[ (i_k[1] > i_k[2]) ]]></Item> 
+			<Item type="error"><![CDATA[ (i_k[2] > i_k[3]) ]]></Item> 
+			<Item type="error"><![CDATA[ (i_k[3] > i_k[4]) ]]></Item> 
+			<Item type="error"><![CDATA[ (i_k[4] > i_k[5]) ]]></Item> 
+			<Item type="error"><![CDATA[ (i_k[5] > i_k[6]) ]]></Item> 
+			<Item type="error"><![CDATA[ (i_k[6] > i_k[7]) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[<b>RPM/MAP Corr. table MAP header</b> must be in monotonous ascending order!<br><br>
+				Please check it in Menu: <a href="mapCorrTbl">Tuning / "RPM/MAP Corr."</a>]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="Table header order" errorMsg="MAT/TPS Ign. Retard table MAT header (w[r]): must be in strictly monotonous ascending order!"> 
+			<Item type="error"><![CDATA[ (w_r[0] > w_r[1]) ]]></Item> 
+			<Item type="error"><![CDATA[ (w_r[1] > w_r[2]) ]]></Item> 
+			<Item type="error"><![CDATA[ (w_r[2] > w_r[3]) ]]></Item> 
+			<Item type="error"><![CDATA[ (w_r[3] > w_r[4]) ]]></Item> 
+			<Item type="error"><![CDATA[ (w_r[4] > w_r[5]) ]]></Item> 
+			<Item type="error"><![CDATA[ (w_r[5] > w_r[6]) ]]></Item> 
+			<Item type="error"><![CDATA[ (w_r[6] > w_r[7]) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[<b>MAT/TPS Ign. Retard table MAT header</b> must be in monotonous ascending order!<br><br>
+				Please check it in Menu: <a href="matTpsRetardTbl">Tuning / "MAT/TPS Ign. Retard"</a>]]>
+			</ErrorDetail>
+		</Rule>
+		<Rule key="Table header order" errorMsg="MAT/TPS Ign. Retard table TPS header (w[k]): must be in strictly monotonous ascending order!"> 
+			<Item type="error"><![CDATA[ (w_k[0] > w_k[1]) ]]></Item> 
+			<Item type="error"><![CDATA[ (w_k[1] > w_k[2]) ]]></Item> 
+			<Item type="error"><![CDATA[ (w_k[2] > w_k[3]) ]]></Item> 
+			<Item type="error"><![CDATA[ (w_k[3] > w_k[4]) ]]></Item> 
+			<Item type="error"><![CDATA[ (w_k[4] > w_k[5]) ]]></Item> 
+			<Item type="error"><![CDATA[ (w_k[5] > w_k[6]) ]]></Item> 
+			<Item type="error"><![CDATA[ (w_k[6] > w_k[7]) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[<b>MAT/TPS Ign. Retard table TPS header</b> must be in monotonous ascending order!<br><br>
+				Please check it in Menu: <a href="matTpsRetardTbl">Tuning / "MAT/TPS Ign. Retard"</a>]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="Table header order" errorMsg="Launch RPM Curve X value(s) (roadspeed or time): must be in strictly monotonous ascending order!"> 
+			<Item type="error"><![CDATA[ (s[15] > 0) & (s[8] > s[9]) ]]></Item> 
+			<Item type="error"><![CDATA[ (s[15] > 0) & (s[9] > s[10]) ]]></Item> 
+			<Item type="error"><![CDATA[ (s[15] > 0) & (s[10] > s[11]) ]]></Item> 
+			<Item type="error"><![CDATA[ (s[15] > 0) & (s[11] > s[12]) ]]></Item> 
+			<Item type="error"><![CDATA[ (s[15] > 0) & (s[12] > s[13]) ]]></Item> 
+			<Item type="error"><![CDATA[ (s[15] > 0) & (s[13] > s[14]) ]]></Item> 
+			<Item type="error"><![CDATA[ (s[15] > 0) & (s[14] > s[15]) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[<b>Launch RPM Curve header value(s) (roadspeed or time)</b> must be in monotonous ascending order!<br><br>
+				Please check it in Menu: <a href="roadSpeed_vs_RPM_Curve">Motorsports / "Launch RPM Curve"</a>]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="Table header order" errorMsg="CLT/MAP Ign. Adjust table CLT header (s[32]): must be in strictly monotonous ascending order!" minfw="1.2.23"> 
+			<Item type="error"><![CDATA[ (s[32] > s[33]) ]]></Item> 
+			<Item type="error"><![CDATA[ (s[33] > s[34]) ]]></Item> 
+			<Item type="error"><![CDATA[ (s[34] > s[35]) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[<b>CLT/MAP Ign. Adjust table CLT header</b> must be in monotonous ascending order!<br><br>
+				Please check it in Menu: <a href="cltignadjTbl_MAP">Tuning / "CLT/LOAD Ign. Adjust"</a>]]>
+			</ErrorDetail>
+		</Rule>
+		<Rule key="Table header order" errorMsg="CLT/MAP Ign. Adjust table MAP header (s[36]): must be in strictly monotonous ascending order!" minfw="1.2.23"> 
+			<Item type="error"><![CDATA[ (s[36] > s[37]) ]]></Item> 
+			<Item type="error"><![CDATA[ (s[37] > s[38]) ]]></Item> 
+			<Item type="error"><![CDATA[ (s[38] > s[39]) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[<b>CLT/MAP Ign. Adjust table MAP header</b> must be in monotonous ascending order!<br><br>
+				Please check it in Menu: <a href="cltignadjTbl_MAP">Tuning / "CLT/LOAD Ign. Adjust"</a>]]>
+			</ErrorDetail>
+		</Rule>
+		
+		
+		<Rule key="CLT/MAP Ign. Adjust" errorMsg="CLT/MAP Ign. Adjust table needs to be filled with reasonable values" minfw="1.2.23"> 
+			<Item type="error"><![CDATA[ (s[16] == 0) & (s[17] == 0) & (s[18] == 0) & (s[19] == 0) ]]></Item> 
+			<Item type="error"><![CDATA[ (s[20] == 0) & (s[21] == 0) & (s[22] == 0) & (s[23] == 0) ]]></Item> 
+			<Item type="error"><![CDATA[ (s[24] == 0) & (s[25] == 0) & (s[26] == 0) & (s[27] == 0) ]]></Item> 
+			<Item type="error"><![CDATA[ (s[28] == 0) & (s[29] == 0) & (s[30] == 0) & (s[31] == 0) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[<b>CLT/MAP Ign. Adjust table</b> needs to be filled with reasonable values!<br><br>
+				Please check it in Menu: <a href="cltignadjTbl_MAP">Tuning / "CLT/LOAD Ign. Adjust"</a>]]>
+			</ErrorDetail>
+		</Rule>
+		
+		
+		<!-- <Rule key="Ego Banks" errorMsg="Ego control banks fully filled with sensor 2 not supported" inisymbols="ego_inj0, ego_inj1, ego_inj2, ego_inj3, ego_inj4, ego_inj5, ego_inj6, ego_inj7"> -->
+		<Rule key="Ego Banks" errorMsg="Ego control banks fully filled with sensor 2 not supported" minfw="1.2.9">
+			<Item type="error"><![CDATA[ (injAlternate == 0) && ((ego_banks & 1) == 1) ]]></Item>
+		 	<Item type="error"><![CDATA[ (injAlternate == 1) && ((ego_banks & 3) == 3) ]]></Item>
+			<Item type="error"><![CDATA[ (injAlternate == 2) && ((ego_banks & 7) == 7) ]]></Item>
+			<Item type="error"><![CDATA[ (injAlternate == 3) && ((ego_banks & 15) == 15) ]]></Item>
+			<Item type="error"><![CDATA[ (injAlternate == 4) && ((ego_banks & 31) == 31) ]]></Item>
+			<Item type="error"><![CDATA[ (injAlternate == 5) && ((ego_banks & 63) == 63) ]]></Item>
+			<Item type="error"><![CDATA[ (injAlternate == 6) && ((ego_banks & 127) == 127) ]]></Item>
+			<Item type="error"><![CDATA[ (injAlternate == 7) && ((ego_banks & 255) == 255) ]]></Item>
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[ <b>Ego control banks fully filled with sensor 2 not supported!</b><br><br>
+				When using a single Lambda sensor and single ego controller select sensor 1 for all injectors. When using dual Lambda sensors together with per bank (or per cylinder group) dual ego control,
+				select the corresponding Lambda sensor for each injector.<br><br>
+				Please correct it in Menu: <a href="egobanks">Base Setup / "Ego correction banks"</a> ]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="Ego Banks" errorMsg="Dual Ego control disabled but (some) Ego control banks filled with sensor 2 not supported" minfw="1.2.9">
+			<Item type="error"><![CDATA[ ((config11 & 4) == 0) && (injAlternate == 0) && ((ego_banks & 1) != 0) ]]></Item>
+		 	<Item type="error"><![CDATA[ ((config11 & 4) == 0) && (injAlternate == 1) && ((ego_banks & 3) != 0) ]]></Item>
+			<Item type="error"><![CDATA[ ((config11 & 4) == 0) && (injAlternate == 2) && ((ego_banks & 7) != 0) ]]></Item>
+			<Item type="error"><![CDATA[ ((config11 & 4) == 0) && (injAlternate == 3) && ((ego_banks & 15) != 0) ]]></Item>
+			<Item type="error"><![CDATA[ ((config11 & 4) == 0) && (injAlternate == 4) && ((ego_banks & 31) != 0) ]]></Item>
+			<Item type="error"><![CDATA[ ((config11 & 4) == 0) && (injAlternate == 5) && ((ego_banks & 63) != 0) ]]></Item>
+			<Item type="error"><![CDATA[ ((config11 & 4) == 0) && (injAlternate == 6) && ((ego_banks & 127) != 0) ]]></Item>
+			<Item type="error"><![CDATA[ ((config11 & 4) == 0) && (injAlternate == 7) && ((ego_banks & 255) != 0) ]]></Item>
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[ <b>Dual Ego control disabled but (some) Ego control banks filled with Sensor 2 not supported!</b><br><br>
+				When using a single Lambda sensor and single ego controller select sensor 1 for all injectors. When using dual Lambda sensors together with per bank (or per cylinder group) dual ego control,
+				select the corresponding Lambda sensor for each injector.<br><br>
+				Please correct it in Menu: <a href="egobanks">Base Setup / "Ego correction banks"</a> ]]>
+			</ErrorDetail>
+		</Rule>
+		
+		
+		
+		<!--
+		<Rule key="Table header order" errorMsg="Launch RPM Curve RPM value(s): must be in strictly monotonous ascending order!"> 
+			<Item type="error"><![CDATA[ (s[0] >= s[1]) ]]></Item> 
+			<Item type="error"><![CDATA[ (s[1] >= s[2]) ]]></Item> 
+			<Item type="error"><![CDATA[ (s[2] >= s[3]) ]]></Item> 
+			<Item type="error"><![CDATA[ (s[3] >= s[4]) ]]></Item> 
+			<Item type="error"><![CDATA[ (s[4] >= s[5]) ]]></Item> 
+			<Item type="error"><![CDATA[ (s[5] >= s[6]) ]]></Item> 
+			<Item type="error"><![CDATA[ (s[6] >= s[7]) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[<b>Launch RPM table RPM value(s)</b> must be in monotonous ascending order!<br>
+				Please check it in Menu: <a href="roadSpeed_vs_RPM_Curve">Tuning/"Launch RPM Curve"</a>
+				<br>
+				$MENU_LINK
+			 ]]>
+			</ErrorDetail>
+		</Rule>
+		-->
+		
+		
+		
+<!--
+		<Rule key="warmup_clt[9]" errorMsg="Please check warmup_clt[9]!" warningMsg="Please check warmup_clt[9]!">
+			<Item type="error">99-warmup_clt[9]</Item>
+			<Item type="error">warmup_clt[9] - 101</Item>
+			<Item type="warning">(warmup_clt[9] == 99) || (warmup_clt[9] == 101)</Item>
+			<Item type="ok">warmup_clt[9] = 100</Item>
+			<ErrorDetail><![CDATA[ $MENU_LINK ]]>
+			</ErrorDetail>
+		</Rule>
+-->
+<!--
+	[12:44:21] <emil_> if missingtooth & N-2 & special = normal ->  twidth(16 bit) = 360 / (tooth_wheel +2 )
+[12:44:21] <emil_> if missingtooth & N-1 & special = normal -> twidth(16 bit) = 360 / (tooth_wheel +1)
+[12:44:21] <emil_> if coiltype & special = audi divby3  -> twidth(16 bit) = 720 / tooth_wheel
+
+Missing: (primary_trigger & 2) >> 1 == 0)
+coiltype : (primary_trigger & 2) >>1  == 1)
+
+N-2:	(primary_trigger & 16)  >> 4 = 0
+N-1:	(primary_trigger & 16)  >> 4 = 1
+
+type normal = (primary_trigger & (32+ 64+128)  )  >> 5 = 0
+
+-->
+
+		<Rule key="tooth_wheel_twidth" warningMsg="Please check tooth_wheel_twidth!">
+<!--
+		<Item type="warning"><![CDATA[ isMissingTooth & isN2 & isTriggerTypeNormal & (((tooth_wheel_twidth_Deg -  360 / ( tooth_wheel + 2 ) ) > 0.1) || ((tooth_wheel_twidth_Deg -  360 / ( tooth_wheel + 2 ) ) < -0.1)) ]]></Item>
+-->
+		<Item type="warning"><![CDATA[ isMissingTooth & isN2 & isTriggerTypeNormal & (tooth_wheel_twidth_Deg !=  360 / ( tooth_wheel + 2 ))  ]]></Item>
+		<Item type="warning"><![CDATA[ isMissingTooth & isN1 & isTriggerTypeNormal & (tooth_wheel_twidth_Deg !=  360 / ( tooth_wheel + 1 + elise_trigger ) ) ]]></Item>	
+		<Item type="warning"><![CDATA[ isCoilType & isTriggerTypeAudiDivby3 & (tooth_wheel_twidth_Deg !=  720 / ( tooth_wheel) ) ]]></Item>
+		<ErrorDetail><![CDATA[ $MENU_LINK 
+		Calculation:<br>
+			if "Trigger type" = "Misingtooth" and "Missing tooth type" = "N-2" than "Angular tooth of width" =  "360 / ( Number Of Teeth On Wheel + 2 )" <br>
+			
+			]]>
+		</ErrorDetail>
+		</Rule>
+		
+		<Rule key="tooth_wheel" warningMsg="Please check Number Of Teeth On Wheel" inisymbols="tooth_wheel_twidth, primary_trigger, secondary_trigger">
+		 <Item type="warning"><![CDATA[ !isSubaru && isCoilType && ( (secondary_trigger & 126) != 24 ) && ( tooth_wheel != NCYL ) && !isExtraPulseTrigger ]]></Item>
+		 <Item type="warning"><![CDATA[ !isSubaru && isCoilType && ( (secondary_trigger & 126) == 24 ) && ( ( tooth_wheel mod NCYL ) != 0 ) ]]></Item>
+		 <ErrorDetail><![CDATA[ If trigger type is "Coil-type" and you have no Cam-Sync, the number of teeth on wheel and the number of cylinders should be equal! 
+		 If you have cam-sync then the number of teeth on wheel should be dividable by the number of cylinders!
+		 $MENU_LINK ]]>
+		 </ErrorDetail>
+		</Rule>
+
+		<Rule key="ExtraPulseTrigger" warningMsg="Special extrapulse enabled" inisymbols="strig_extra_pulse_trigger" minfw="1.1.96" >
+		 <Item type="warning"><![CDATA[ isExtraPulseTrigger ]]></Item>
+		 <ErrorDetail><![CDATA[ Special extra pulse trigger is enabled!<br>
+		 $MENU_LINK ]]>
+		 </ErrorDetail>
+		</Rule>
+		
+		<Rule key="isThirdTrigger" warningMsg="3rd trigger enabled" inisymbols="camshaft_ex_trig_ena" minfw="1.1.94" >
+		 <Item type="warning"><![CDATA[ isThirdTrigger ]]></Item>
+		 <ErrorDetail><![CDATA[ Extra 3rd trigger is enabled!<br>
+		 $MENU_LINK ]]>
+		 </ErrorDetail>
+		</Rule>
+		
+		<Rule key="Sec trig max rpm at Nissan" warningMsg="Nissan sec. trigger" inisymbols="sectrig_maxrpm" minfw="1.1.99" >
+		 <Item type="warning"><![CDATA[ isNissanSecTrigger && (sectrig_maxrpm >= 42) ]]></Item>
+		 <ErrorDetail><![CDATA[ If nissan trigger is enabled. <b>Nissan sec. trigger ignore above</b> should be around 3100! <br>
+		 $MENU_LINK ]]>
+		 </ErrorDetail>
+		</Rule>
+		
+		
+		<Rule key="film_coeff" warningMsg="Fuel film enabled">
+		 <Item type="warning"><![CDATA[ film_enlean != 0 ]]></Item>
+		 <Item type="warning"><![CDATA[ film_coeff != 0 ]]></Item>
+		 <ErrorDetail><![CDATA[ Set factor and downscale to zero unless if you know what you doing<br>
+		 $MENU_LINK ]]>
+		 </ErrorDetail>
+		</Rule>
+	
+		<Rule key="fuelcut_min_kpa" warningMsg="FuelCut min kPa too high">
+		 <Item type="warning"><![CDATA[ fuelcut_min_kpa > 18 ]]></Item>
+		 <ErrorDetail><![CDATA[ Fuelcut minimum is too high, recomended value is max 36 kPa (high boost) or 18kPa (low boost)<br>
+		 $MENU_LINK ]]>
+		 </ErrorDetail>
+		</Rule>
+	
+		<Rule key="engine_off_delay" warningMsg="Engine off delay (Fuel Pump off after inactivity) too high">
+		 <Item type="warning"><![CDATA[ engine_off_delay >20 ]]></Item>
+		 <ErrorDetail><![CDATA[ Engine off delay (Fuel Pump off after inactivity) too high<br>
+			, recomended range is 0.5-1s kPa<br> $MENU_LINK ]]>
+		 </ErrorDetail>
+		</Rule>
+	
+		<Rule key="secondary_trig5" errorMsg=" Both edges during cranking selected">
+		 <Item type="error"><![CDATA[ secondary_trigger & 32 ]]></Item>
+		 <ErrorDetail><![CDATA[ Both edges during cranking selected<br>
+		Use single edge unless you (really) know what you doing<br>
+		 $MENU_LINK ]]>
+		 </ErrorDetail>
+		</Rule>
+
+		<Rule key="Angular width of tooth" warningMsg="Please check Angular width of tooth" inisymbols="tooth_wheel_twidth">
+		 <Item type="warning"><![CDATA[ tooth_wheel_twidth_Deg < 6 ]]></Item>	
+		 <ErrorDetail><![CDATA[ Please check<br> 
+		 <b>Angular width of tooth:</b> It should be greater then 6 deg: $MENU_LINK ]]>
+		</ErrorDetail>
+		</Rule>
+		
+		<Rule key="cranking_thres" warningMsg="Please check Cranking threshold!">
+		 <Item type="warning"> <![CDATA[ cranking_thres > 5 ]]></Item>	
+		 <ErrorDetail><![CDATA[ Cranking threshold shold be less than 600 rpm $MENU_LINK ]]>
+		</ErrorDetail>
+		</Rule>
+
+		<Rule key="Shifcut and Launch" warningMsg="Please check shiftcut input!">
+		 <Item type="warning"><![CDATA[ ((als_launch_input & 15) == (shiftcut_conf_input & 15)) && ((shiftcut_conf_input & 15) != 12) && ((shiftcut_conf_input & 48) == 0) ]]></Item>
+		 <ErrorDetail><![CDATA[  Please set shiftcut input different from launch input, except if you want to use shared input feature $MENU_LINK ]]>
+		</ErrorDetail>
+		</Rule>
+
+		<Rule key="boost_egtdec" warningMsg="Please check Boost Target Reduction Above EGT and Fuel Added Above EGT Limit">
+		 <Item type="warning"><![CDATA[ ((8 * boost_egtdec) < 750 ) && ((0.1526 * egt_rich) > 11) ]]></Item>	
+		 <ErrorDetail><![CDATA[ Please check <b>Boost Target Reduction Above EGT</b> and <b>Fuel Added Above EGT Limit</br> in:<br> $MENU_LINK ]]>
+		</ErrorDetail>
+		</Rule>
+
+		<Rule key="cold_ignadjust" warningMsg="Please check Ign Adjust Cold">
+		 <Item type="warning"><![CDATA[ (cold_ignadjust < (128 - 24)) || (cold_ignadjust > ( 128 + 24 )) ]]></Item>
+		 <ErrorDetail><![CDATA[ "Ign Adjust - Cold" should be between +-3 degree <br>
+		  Please check in menu: <br> $MENU_LINK ]]>
+		</ErrorDetail>
+		</Rule>
+
+		<Rule key="IAC integral lowmap" warningMsg="Please check IAC Integral low map">
+		 <Item type="warning"><![CDATA[ (iac_integral_lowmap * kpa_range) > 50 ]]></Item>
+		 <ErrorDetail><![CDATA[ IAC Integral low map should be less than 50kPa <br>
+		  Please check in menu: <br> $MENU_LINK ]]>
+		</ErrorDetail>
+		</Rule>
+
+		<Rule key="ign_dwellmap" warningMsg="Please check Coil Charge Time MAP Scale">
+		 <Item type="warning"><![CDATA[ ( ign_dwellmap > 5) ]]></Item>	
+		 <ErrorDetail><![CDATA[ 
+		 "Coil Charge Time MAP Scale" > 5 means at high MAP => high dwell => 
+		 ignition transformer coil current spike can freeze ECU (harness dependent)<br>
+		 Please check: <br> Coil Charge Time MAP Scale</b> in menu:<br> $MENU_LINK ]]>
+		</ErrorDetail>
+		</Rule>
+
+		<Rule key="iac_minpwm" warningMsg="Please check IAC min pwm">
+		 <Item type="warning"><![CDATA[ ( iac_minpwm > 102) && isIACStepper ]]></Item>	
+		 <ErrorDetail><![CDATA[ 
+		 "IAC min pwm" > 40% seems too high<br>
+		Please check: <br>IAC min pwm</b> in menu:<br> $MENU_LINK ]]>
+		</ErrorDetail>
+		</Rule>
+
+		<Rule key="Hard Spark Cut limit" warningMsg="Please check Hard Spark Cut limit">
+		 <Item type="warning"><![CDATA[ ( shiftcut_conf_input & 64 ) == 64 ]]></Item>	
+		 <ErrorDetail><![CDATA[ 
+		 Please check Hard Spark Cut limit <br> $MENU_LINK ]]>
+		</ErrorDetail>
+		</Rule>
+
+		<Rule key="strig_ls1" warningMsg="Please check Ls-1 config bit" minfw="1.1.92" inisymbols="strig_ls1">
+		 <Item type="warning"><![CDATA[ ( strig_validation & 32) == 32 ]]></Item>	
+		 <ErrorDetail><![CDATA[ 
+		 Use only with Hall sensor and LS-1 engine <br>  $MENU_LINK ]]>
+		</ErrorDetail>
+		</Rule>
+
+		<Rule key="als_iac_pos" warningMsg="Please check ALS IAC pos and IAC max steps">
+		 <Item type="warning"><![CDATA[ ( iac_max_steps < als_iacpos) ]]></Item>	
+		 <ErrorDetail><![CDATA[ 
+		 "IAC max steps" &lt; "Als IAC pos"<br>
+		Please check: <br>IAC min pwm</b> in menu:<br> $MENU_LINK ]]>
+		</ErrorDetail>
+		</Rule>
+
+		<Rule key="trigger_tooth" errorMsg="Please check First and Next trigger tooth settings">
+		 <Item type="error"><![CDATA[ ( (another_trigger_tooth - trigger_tooth)  < 0 ) ]]></Item>
+		 <ErrorDetail><![CDATA[ 
+		Next Trigger Tooth must be greater then First Trigger Tooth!<br>
+		Please check: <br>First & Next trigger tooth settings</b> in menu:<br> $MENU_LINK ]]>
+		</ErrorDetail>
+		</Rule>
+
+		<Rule key="engine_off_delay" errorMsg="Please check Engine off delay (Fuel Pump off after inactivity) ">
+		 <Item type="error"><![CDATA[ ( engine_off_delay < 2 ) ]]></Item>
+		 <ErrorDetail><![CDATA[ 
+		Engine off delay (Fuel Pump off after inactivity) should be greater than or equal to 0.5! Recommended range 0.5-1 second<br>
+		Please check: <br>Engine Off delay</b> in menu:<br> $MENU_LINK ]]>
+		</ErrorDetail> 
+		</Rule>
+		
+		
+		<Rule key="nonve_kpalookup_minkpa" warningMsg="Please check: nonve_kpalookup_minkpa" inisymbols="nonve_kpalookup_minkpa" minfw="1.1.77" maxfw="1.2.11">
+		 <Item type="warning"><![CDATA[ ( (nonve_kpalookup_minkpa) > 0 ) && (loadmult == 0) ]]></Item>
+		 <Item type="warning"><![CDATA[ ( (nonve_kpalookup_minkpa) != 55 ) && (loadmult == 1) ]]></Item>
+		 <ErrorDetail><![CDATA[ 
+		nonve_kpalookup_minkpa should be greater than 0 in normal MAP based VE tables!<br>
+		Please check in menu:<br> $MENU_LINK ]]>
+		</ErrorDetail> 
+		</Rule>
+		
+		<Rule key="nonve_kpalookup_minkpa" warningMsg="Please check: nonve_kpalookup_minkpa" inisymbols="nonve_kpalookup_minkpa" minfw="1.2.12">
+		 <Item type="warning"><![CDATA[ ( (nonve_kpalookup_minkpa) > 0 ) && ((config13 & 32) == 0) ]]></Item>
+		 <ErrorDetail><![CDATA[ 
+		Hybrid Y-axis for Ignition/Lambda tables enabled, if this is unintentional disable it by setting nonve_kpalookup_minkpa to 0!<br>
+		Please check in menu:<br> $MENU_LINK ]]>
+		</ErrorDetail> 
+		</Rule>
+		
+		<Rule key="Sec. trigger HALL dirac filter" warningMsg="Please check: Sec. trigger HALL dirac filter">
+		 <Item type="warning"><![CDATA[ ( (( config12 >> 6) & 1)  == 1) ]]></Item>
+		 <ErrorDetail><![CDATA[<b>HALL-dirac filtering</b> is only for problematic, noisy low toothcount HALL sensor 
+		 (max 24 tooth AND trigger signal stays min 10 crankdegrees after chosen edge).
+		It is not recommended anyway, unless it is really needed.<br>
+		<b>Must not be set for VR trigger at all.</b><br><br> <a href="trigger2">"Base Setup/Secondary Trigger Settings"</a>  ]]>
+		</ErrorDetail> 
+		</Rule>
+		
+		<Rule key="Prim. trigger HALL dirac filter" warningMsg="Please check: Prim. trigger HALL dirac filter">
+		 <Item type="warning"><![CDATA[ ( (( config12 >> 7) & 1)  == 1) ]]></Item>
+		 <ErrorDetail><![CDATA[<b>HALL-dirac filtering</b> is only for problematic, noisy low toothcount HALL sensor 
+		 (max 24 tooth AND trigger signal stays min 10 crankdegrees after chosen edge).
+		It is not recommended anyway, unless it is really needed.<br>
+		<b>Must not be set for VR trigger at all.</b><br><br> <a href="trigger">"Base Setup/Primary Trigger Settings"</a> ]]>
+		</ErrorDetail> 
+		</Rule>
+
+		<Rule key="Third trigger HALL dirac filter" warningMsg="Please check: Third trigger HALL dirac filter" minfw="1.2.15">
+			<Item type="warning"><![CDATA[ ( ( vvti_cold & 2) == 2) ]]></Item>
+			<ErrorDetail><![CDATA[<b>HALL-dirac filtering</b> is only for problematic, noisy low toothcount HALL sensor 
+				(max 24 tooth AND trigger signal stays min 10 crankdegrees after chosen edge).
+				It is not recommended anyway, unless it is really needed.<br>
+				<b>Must not be set for VR trigger at all.</b><br><br> <a href="camshaft_angle_control">"Motorsports/Camshaft angle control"</a> ]]>
+			</ErrorDetail> 
+		</Rule>
+		
+		<Rule key="Wideband sensor type" warningMsg="Make sure your LSU sensor type selection is valid" minfw="1.2.15">
+			<Item type="warning"><![CDATA[ ( (wbo2_config & 128) != 128 )  ]]></Item>
+			<Item type="warning"><![CDATA[ ( (wbo2_config & 64) != 64 )  ]]></Item>
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[ Please verify that your selected wideband sensor type matches the actual used sensor, default is LSU 4.2!<br>
+				<br>Usage of LSU 4.9 sensors is supported but requires some hardware changes; Use this feature only if you really know what you are doing.<br>
+				<br>To change your applicable LSU type, please check: <a href="wideband">"Base Setup/Wideband Settings"</a>]]>
+			</ErrorDetail> 
+		</Rule>
+		
+		<Rule key="Spark delay" errorMsg="Spark delay is greater than 3 degree"> 
+			<Item type="error"><![CDATA[ (h3[0] > 12) ]]></Item> 
+			<Item type="error"><![CDATA[ (h3[1] > 12) ]]></Item> 
+			<Item type="error"><![CDATA[ (h3[2] > 12) ]]></Item> 
+			<Item type="error"><![CDATA[ (h3[3] > 12) ]]></Item> 
+			<Item type="error"><![CDATA[ (h3[4] > 12) ]]></Item> 
+			<Item type="error"><![CDATA[ (h3[5] > 12) ]]></Item> 
+			<Item type="error"><![CDATA[ (h3[6] > 12) ]]></Item> 
+			<Item type="error"><![CDATA[ (h3[7] > 12) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[ Spark delay is greater than 3 degree!<br> $MENU_LINK ]]>
+			</ErrorDetail>
+		</Rule>
+		<Rule key="Injector Output Collision" errorMsg="Each Injector output can be assigned to just ONE injector group!"> 
+			<Item type="error"><![CDATA[ ( ((h0[0] & 1 )+  (h0[1] & 1) + (h0[2] & 1) + (h0[3] & 1) + (h0[4] & 1) + (h0[5] & 1) + (h0[6] & 1) + (h0[7] & 1))  > 1 ) ]]></Item> 
+			<Item type="error"><![CDATA[ ( ((h0[0] & 2 )+ ( h0[1] & 2 )+ ( h0[2] & 2 )+ ( h0[3] & 2 )+ ( h0[4] & 2 )+ ( h0[5] & 2 )+ ( h0[6] & 2 )+ ( h0[7] & 2))  > 2 ) ]]></Item> 
+			<Item type="error"><![CDATA[ ( ((h0[0] & 4 )+ ( h0[1] & 4 )+ ( h0[2] & 4 )+ ( h0[3] & 4 )+ ( h0[4] & 4 )+ ( h0[5] & 4 )+ ( h0[6] & 4 )+ ( h0[7] & 4))  > 4 ) ]]></Item> 
+			<Item type="error"><![CDATA[ ( ((h0[0] & 8 )+ ( h0[1] & 8 )+ ( h0[2] & 8 )+ ( h0[3] & 8 )+ ( h0[4] & 8 )+ ( h0[5] & 8 )+ ( h0[6] & 8 )+ ( h0[7] & 8))  > 8 ) ]]></Item> 
+			<Item type="error"><![CDATA[ ( ((h0[0] & 16 )+ ( h0[1] & 16 )+ ( h0[2] & 16 )+ ( h0[3] & 16 )+ ( h0[4] & 16 )+ ( h0[5] & 16 )+ ( h0[6] & 16 )+ ( h0[7] & 16))  > 16 ) ]]></Item> 
+			<Item type="error"><![CDATA[ ( ((h0[0] & 32 )+ ( h0[1] & 32 )+ ( h0[2] & 32 )+ ( h0[3] & 32 )+ ( h0[4] & 32 )+ ( h0[5] & 32 )+ ( h0[6] & 32 )+ ( h0[7] & 32))  > 32 ) ]]></Item> 
+			<Item type="error"><![CDATA[ ( ((h0[0] & 64 )+ ( h0[1] & 64 )+ ( h0[2] & 64 )+ ( h0[3] & 64 )+ ( h0[4] & 64 )+ ( h0[5] & 64 )+ ( h0[6] & 64 )+ ( h0[7] & 64))  > 64 ) ]]></Item> 
+			<Item type="error"><![CDATA[ ( ((h0[0] & 128 )+ ( h0[1] & 128 )+ ( h0[2] & 128 )+ ( h0[3] & 128 )+ ( h0[4] & 128 )+ ( h0[5] & 128 )+ ( h0[6] & 128 )+ ( h0[7] & 128))  > 128 ) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[<b>Injector Output Collision</b> Each Injector output can be assigned to just ONE injector group!<br>
+				Please check it in Menu: <a href="injOutVisual">"Base Setup/Injector Outputs Visual"</a>]]>
+			</ErrorDetail>
+		</Rule>
+		<Rule key="Next trigger tooth invalid" errorMsg="Next trigger tooth = total tooth (number of teeth + missing(s) )*2 / cylinders!"> 
+			<Item type="error"><![CDATA[ isMissingTooth & isN2 & isTriggerTypeNormal & ( ((tooth_wheel + 2) * 2 / (NCYL))  != another_trigger_tooth ) ]]></Item> 
+			<Item type="error"><![CDATA[ isMissingTooth & isN1 & isTriggerTypeNormal & ( ((tooth_wheel + elise_trigger +1) * 2 / (NCYL))  != another_trigger_tooth ) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[Next trigger tooth = total tooth (number of teeth + missing(s) )*2 / cylinders!<br>
+				Please check it in Menu: <a href="trigger">"Base Setup/Primary Trigger Settings"</a>]]>
+			</ErrorDetail>
+		</Rule>
+		<Rule key="Low Boost is obsolete" warningMsg="Low Boost (Table kPa unit 1 ) might be not supported in future!"> 
+			<Item type="warning"><![CDATA[ (kpa_conf & 15) == 1 ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[Low Boost (Table KPa unit 1 (&lt;250kpa) ) might not be supported in future! Do not use, especially for ALPHA-N <br>
+				Please check it in Menu: <a href="calibration">"Base Setup/ECU calibrations"</a>]]>
+			</ErrorDetail>
+		</Rule>
+		<Rule key="Reference tooth table invalid" errorMsg="Reference tooth difference needs to be equal to next trigger tooth!"> 
+			<Item type="error"><![CDATA[ ((ignchmax & 7) >0) & !( ((h1[0]-h1[1]) == another_trigger_tooth) || ((h1[0] + (totaltooth) - h1[1]) == another_trigger_tooth) || ((h1[0] + 2* (totaltooth) - h1[1]) == another_trigger_tooth) )  ]]></Item> 
+			<Item type="error"><![CDATA[ ((ignchmax & 7) >1) & !( ((h1[1]-h1[2]) == another_trigger_tooth) || ((h1[1] + (totaltooth) - h1[2]) == another_trigger_tooth) || ((h1[1] + 2* (totaltooth) - h1[2]) == another_trigger_tooth) )  ]]></Item> 
+			<Item type="error"><![CDATA[ ((ignchmax & 7) >2) & !( ((h1[2]-h1[3]) == another_trigger_tooth) || ((h1[2] + (totaltooth) - h1[3]) == another_trigger_tooth) || ((h1[2] + 2* (totaltooth) - h1[3]) == another_trigger_tooth) )  ]]></Item> 
+			<Item type="error"><![CDATA[ ((ignchmax & 7) >3) & !( ((h1[3]-h1[4]) == another_trigger_tooth) || ((h1[3] + (totaltooth) - h1[4]) == another_trigger_tooth) || ((h1[3] + 2* (totaltooth) - h1[4]) == another_trigger_tooth) )  ]]></Item> 
+			<Item type="error"><![CDATA[ ((ignchmax & 7) >4) & !( ((h1[4]-h1[5]) == another_trigger_tooth) || ((h1[4] + (totaltooth) - h1[5]) == another_trigger_tooth) || ((h1[4] + 2* (totaltooth) - h1[5]) == another_trigger_tooth) )  ]]></Item> 
+			<Item type="error"><![CDATA[ ((ignchmax & 7) >5) & !( ((h1[5]-h1[6]) == another_trigger_tooth) || ((h1[5] + (totaltooth) - h1[6]) == another_trigger_tooth) || ((h1[5] + 2* (totaltooth) - h1[6]) == another_trigger_tooth) )  ]]></Item> 
+			<Item type="error"><![CDATA[ ((ignchmax & 7) >6) & !( ((h1[6]-h1[7]) == another_trigger_tooth) || ((h1[6] + (totaltooth) - h1[7]) == another_trigger_tooth) || ((h1[6] + 2* (totaltooth) - h1[7]) == another_trigger_tooth) )  ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[Reference tooth difference needs to be equal to next trigger tooth!<br>
+				Please check it in Menu: <a href="hone">"Base Setup/Trigger Reference Tooth Table"</a>]]>
+			</ErrorDetail>
+		</Rule>
+		<Rule key="Injector angle invalid" warningMsg="Injector table bins need to be 720 degree if secondary trigger disabled!"> 
+			<Item type="warning"><![CDATA[ ((secondary_trigger & 16) == 0 ) & (b[156] !=0)   ]]></Item> 
+			<Item type="warning"><![CDATA[ ((secondary_trigger & 16) == 0 ) & (b[157] !=0)   ]]></Item> 
+			<Item type="warning"><![CDATA[ ((secondary_trigger & 16) == 0 ) & (b[158] !=0)   ]]></Item> 
+			<Item type="warning"><![CDATA[ ((secondary_trigger & 16) == 0 ) & (b[159] !=0)   ]]></Item> 
+			<Item type="warning"><![CDATA[ ((secondary_trigger & 16) == 0 ) & (b[160] !=0)   ]]></Item> 
+			<Item type="warning"><![CDATA[ ((secondary_trigger & 16) == 0 ) & (b[161] !=0)   ]]></Item> 
+			<Item type="warning"><![CDATA[ ((secondary_trigger & 16) == 0 ) & (b[162] !=0)   ]]></Item> 
+			<Item type="warning"><![CDATA[ ((secondary_trigger & 16) == 0 ) & (b[163] !=0)   ]]></Item> 
+			<Item type="warning"><![CDATA[ ((secondary_trigger & 16) == 0 ) & (b[164] !=0)   ]]></Item> 
+			<Item type="warning"><![CDATA[ ((secondary_trigger & 16) == 0 ) & (b[165] !=0)   ]]></Item> 
+			<Item type="warning"><![CDATA[ ((secondary_trigger & 16) == 0 ) & (b[166] !=0)   ]]></Item> 
+			<Item type="warning"><![CDATA[ ((secondary_trigger & 16) == 0 ) & (b[167] !=0)   ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[Injector table bins need to be 720 degree if secondary trigger disabled!<br>
+				Please check it in Menu: <a href="injector_angle">"Base Setup/Injector angle curve"</a>]]>
+			</ErrorDetail>
+		</Rule>
+		<Rule key="Secondary trigger validation is enabled" warningMsg="Secondary trigger validation is not recommended!" inisymbols="strig_validation_mode"> 
+			<Item type="warning"><![CDATA[ (strig_validation & 192)>0 ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[Secondary trigger validation is not recommended!<br>
+				Use this feature if you really know what you're doing.<br>
+				Please check it in Menu: <a href="hone">"Base Setup/Secondary Trigger Settings"</a>]]>
+			</ErrorDetail>
+		</Rule>
+		<Rule key="Number of teeth on wheel must not be zero" errorMsg="Number of teeth on wheel must not be zero!"> 
+			<Item type="error"><![CDATA[ tooth_wheel == 0 ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[Number of teeth on wheel must not be zero!<br>
+				Please check it in Menu: <a href="trigger">"Base Setup/Primary Trigger Settings"</a>]]>
+			</ErrorDetail>
+		</Rule>
+		<Rule key="Barometric correction and external boost input configured at the same time" errorMsg="Barometric correction and external boost input use the same input and the same configuration" maxfw="1.2.31"> 
+			<Item type="error"><![CDATA[ ( (( baro_mode & 128 ) == 128 )  && ( ( config13 & 8 ) == 8 )) && (  ( boost_more & 96 ) == 96 ) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[Barometric correction and external boost input use the same input and the same configuration<br>
+				Use MAP target at boostcontrol
+				Please check it in Menu: <a href="constants">"Base Setup/Engine Setup"</a>, <a href="boostcontrol">"Boost Control/Boost Control PID Settings"</a>]]>
+			</ErrorDetail>
+		</Rule>
+		<Rule key="Coolant Fan start temperature might be too high" warningMsg="Coolant Fan start temperature might be too high!"> 
+			<Item type="warning"><![CDATA[ fan_temp > 199 ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[Coolant Fan start temperature might be too high!<br>
+				Recommended value is under 100 C<br>
+				Please check it in Menu: <a href="fan_pump">"Outputs/Fan / Water Pump / FuelPump"</a>]]>
+			</ErrorDetail>
+		</Rule>
+
+		<Rule key="4-1 trigger reftooth bad" warningMsg="4-1 trigger without camsync needs special reftooth setting!"> 
+			<Item type="warning"><![CDATA[ isMissingTooth && isN1 && ( tooth_wheel == 3 ) && ( h1[1] != 6 ) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[4-1 trigger without camsync has internal software camsync<br>
+				Recommended reftooth is 0 6 4 2
+				Please check it in Menu: <a href="hone">"Basic settings / Reference Tooth, related to ignition outputs"</a>]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="Config switch enabled!" warningMsg="Config switch enabled!" inisymbols="config_switch_mode" maxfw="1.1.89"> 
+			<Item type="warning"><![CDATA[ ((confswitch & 168) == 128) ]]></Item> 
+			<Item type="warning"><![CDATA[ ((config_switch & 248) != 0 ) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[ Config switch enabled!<br> $MENU_LINK  ]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="Config switch enabled!" warningMsg="Config switch enabled!" inisymbols="config_switch_mode" minfw="1.1.90"> 
+			<Item type="warning"><![CDATA[ ((config_switch & 248) != 0 ) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[ Config switch enabled!<br> $MENU_LINK  ]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="SD log uses bytestuffed format!" errorMsg="SD log uses bytestuffed format!"> 
+			<Item type="error"><![CDATA[ (knock_chan == 241) && (config12 & 2) ]]></Item> 
+			<Item type="ok">1</Item>
+			<ErrorDetail><![CDATA[ SD log uses bytestuffed format! Experimental! <br> $MENU_LINK  ]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="strig_min_angle" errorMsg="Please check Sectrig. min and max angle" maxfw="1.2.15">
+		 <Item type="error"><![CDATA[ ( strig_min_angle <= strig_max_angle ) ]]></Item>	
+		 <ErrorDetail><![CDATA[ 
+		 Sectrig. max angle must be greater than Sectrig. min angle. <br>  $MENU_LINK ]]>
+		</ErrorDetail>
+		</Rule>
+
+		<Rule key="Adjustable fuel cut enabled" warningMsg="Please check Adjustable Fuel Cut">
+		 <Item type="warning"><![CDATA[ ( softcut_rpm1 < 255 ) || ( softcut_rpm2 < 255 ) ]]></Item>	
+		 <ErrorDetail><![CDATA[ 
+		 Adjustable fuel cut is enabled, take care<br>  $MENU_LINK ]]>
+		</ErrorDetail>
+		</Rule>
+
+		<Rule key="Adjustable fuel cut enabled" warningMsg="Please check Adjustable Fuel Cut" inisymbols="softcut_cut2" >
+		 <Item type="warning"><![CDATA[ ( softcut_cut != 255 ) ]]></Item>	
+		 <ErrorDetail><![CDATA[ 
+		 Adjustable fuelcut on high load <b>can be dangerous</b> not recomended for anyone<br>  $MENU_LINK ]]>
+		</ErrorDetail>
+		</Rule>
+
+		<Rule key="Adjustable fuel cut misconfigured" errorMsg="Please check Adjustable partial Fuel Cut" inisymbols="softcut_cut2, softcut_rpm1, softcut_time1">
+		 <Item type="error"><![CDATA[ ( softcut_rpm1 > softcut_rpm2 ) ]]></Item>	
+		 <Item type="error"><![CDATA[ ( softcut_time1 < softcut_time2 ) ]]></Item>	
+		 <Item type="error"><![CDATA[ ( softcut_cut & 15 ) > ( softcut_cut >> 4) ]]></Item>	
+		 <ErrorDetail><![CDATA[ 
+		 <ul>
+			<li>Adjustable fuelcut high RPM can't be lower then low RPM
+			<li>Adjustable fuelcut high time limit can't be longer then low time limit
+			<li>Adjustable fuelcut high cut % can't be lower then low cut % ( 100% for both recommended )
+		</ul><br>  $MENU_LINK ]]>
+		</ErrorDetail>
+		</Rule>
+
+		<Rule key="Audi Hall scope and internal LEDs enabled" errorMsg="Please check Audi Hall scope and Internal LED settings">
+		 <Item type="error"><![CDATA[ ( ( secondary_trigger & 128 ) && ( lcd_c0 & 128 ) ) ]]></Item>	
+		 <ErrorDetail><![CDATA[ 
+		 Audi Hall scope and Internal LED settings can't be used at the same time
+		<br> $MENU_LINK ]]>
+		</ErrorDetail>
+		</Rule>
+
+		<Rule key="overrun_fuelcut" errorMsg="Partial fulecut and soft fuelcut enabled at the same time" 
+			 warningMsg="Partial fulecut enabled" inisymbols="" >
+			<Item type="error"><![CDATA[ ( ((overrun_fuelcut - overrun_fuelresume) == 11) 
+|| ((overrun_fuelcut - overrun_fuelresume ) == 10) ) && ( ((rev_limit*100) > (softcut_rpm1*64)) || ( (rev_limit*100) > (softcut_rpm2*64) ) ) ]]></Item>
+			<Item type="warning"><![CDATA[ (((overrun_fuelcut - overrun_fuelresume ) == 11) 
+|| ((overrun_fuelcut - overrun_fuelresume ) == 10) ) ]]></Item>
+			<ErrorDetail><![CDATA[ Use Partial fuelcut only with cars with partially open throttle (ALS racecar)<br>
+			without soft fuelcut <br> $MENU_LINK ]]>
+			</ErrorDetail>
+		</Rule>
+	
+		<Rule key="Auditrigger DivBy3" errorMsg="Auditrigger divby3 enabled!" warningMsg="Audi trigger divby3 enabled!"
+			  inisymbols="primary_trigger_sel" >
+			<Item type="warning"><![CDATA[ ( isTriggerTypeAudiDivby3 ) ]]></Item>
+			<ErrorDetail><![CDATA[ Audi divby3 enabled! <br>
+			Please use <b>Auditrigger DivByN</b> and <b>Audi trigger divider 3 instead of divBy3!</b> <br>
+			<br> $MENU_LINK ]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="wbo2_ri_target" errorMsg="Please check wbo2_ri_target" minfw="1.2.2">
+			<Item type="error"><![CDATA[ ( wbo2_ri_target > 180  ) ]]></Item>
+			<Item type="error"><![CDATA[ ( wbo2_ri_target < 160  ) ]]></Item>	
+			<ErrorDetail><![CDATA[ wbo2_ri_target should be greater then 159 and less then 181.
+			<br> $MENU_LINK ]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="wbo2_ri_target2" errorMsg="Please check wbo2_ri_target2" minfw="1.2.15">
+			<Item type="error"><![CDATA[ ( wbo2_ri_target2 > 180  ) && ((config11 & 4) == 4) ]]></Item>
+			<Item type="error"><![CDATA[ ( wbo2_ri_target2 < 160  ) && ((config11 & 4) == 4) ]]></Item>	
+			<ErrorDetail><![CDATA[ wbo2_ri_target2 should be greater then 159 and less then 181.
+			<br> $MENU_LINK ]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="wbo2_ri_target" errorMsg="Please check wbo2_ri_target" maxfw="1.2.1">
+			<Item type="error"><![CDATA[ ( wbo2_ri_target > 155  ) ]]></Item>
+			<Item type="error"><![CDATA[ ( wbo2_ri_target < 140  ) ]]></Item>	
+			<ErrorDetail><![CDATA[ wbo2_ri_target should be greater then 139 and less then 156.
+			<br> $MENU_LINK ]]>
+		</ErrorDetail>
+		</Rule>
+		
+		<Rule key="LCD" errorMsg="Please disable lcd_page_step if it is not connected to a button." >
+			<!-- " LCD bug: lcd_pagestep disabled && inverted mcp3208 input" -->
+			<Item type="error"><![CDATA[ (( lcd_analin & 16)  == 0 ) && ( (lcd_analin & 15) > 7) ]]></Item>
+			<ErrorDetail><![CDATA[ Solution: Please disable lcd_page_step if it is not connected to a button.
+				<br> $MENU_LINK ]]>
+			</ErrorDetail>
+		</Rule>
+
+		<Rule key="prohibit" warningMsg="For I-Button ADC keepalive use 1.2.10 or newer firmware." inisymbols="prohibit_config_ibutton, prohibit_config_ibutton_keepalive" maxfw="1.2.4" >
+			<Item type="warning"><![CDATA[ (( prohibit_config & 128 )  == 128 ) && ( (prohibit_config & 64) == 64) ]]></Item>
+			<ErrorDetail><![CDATA[ For I-Button ADC keepalive use 1.2.10 or newer firmware.
+				<br> $MENU_LINK ]]>
+			</ErrorDetail>
+		</Rule>
+
+		<Rule key="iacIgnAdvLim" warningMsg="Advance Change max Advance should be less than or equal 4 degrees">
+			<Item type="warning"><![CDATA[ iac_ign_advance_limit > 16 ]]></Item>
+			<ErrorDetail><![CDATA[ Advance Change max Advance should be less than or equal 4 degrees. <br> $MENU_LINK </a> ]]>
+			</ErrorDetail>
+		</Rule>
+
+		<Rule key="iacIgnRetLim" warningMsg="Advance Change max Retard should be less than or equal 6 degrees">
+			<Item type="warning"><![CDATA[ iac_ign_retard_limit > 24 ]]></Item>
+			<ErrorDetail><![CDATA[ Advance Change max Retard should be less than or equal 6 degrees. <br> $MENU_LINK </a> ]]>
+			</ErrorDetail>
+		</Rule>
+		
+		<Rule key="ignlambdaYaxisKpaLoad" errorMsg="ignlambdaYaxisKpaLoad = Load is for expert use only" minfw="1.2.32">
+ 			<Item type="error"><![CDATA[ (( config11 & 8) == 8) ]]></Item> 
+			<ErrorDetail><![CDATA[ ignlambdaYaxisKpaLoad = Load is for expert use only, normal users use Kpa! <br> 
+			<br>To adjust, please check: <a href="blending">"Base Setup/Alpha-N / Speed-Density Blending"</a>$MENU_LINK ]]>
+			</ErrorDetail>
+		</Rule>
+
+<!--
+	ETC rules and checks
+-->
+		<Rule key="ETC control" warningMsg="ETC control enabled, EXPERTS only" inisymbols="enable_etc" minfw="1.2.15">
+			<Item type="warning"><![CDATA[ ( (config12 & 1) == 1 ) ]]></Item>
+			<ErrorDetail><![CDATA[ <b> ETC control setup and calibration is a task best suited for experts, it requires appropriate hardware and advanced PID tuning knowledge!</b><br>
+				<br>To disable, please adjust "ETC configured" in dialog: <a href="etcSettings">"Base Setup/ETC Settings"</a> ]]>
+			</ErrorDetail> 
+		</Rule>
+		
+		<Rule key="ETC Frequency" errorMsg="ETC frequency selection invalid" inisymbols="etc_freq" minfw="1.2.15" maxfw="1.2.33">
+ 			<Item type="error"><![CDATA[ ( (config12 & 1) == 1 && ((y[0] & 244) == 0 || (y[0] & 244) == 1) ) ]]></Item> 
+			<ErrorDetail><![CDATA[ <b>ETC frequency selection invalid!</b><br> 
+			<br>To adjust, please check "PWM Frequency" in dialog: <a href="etcSettings">"Base Setup/ETC Settings"</a> ]]>
+			</ErrorDetail>
+		</Rule>
+
+		<Rule key="ETC Frequency" errorMsg="ETC frequency selection invalid" inisymbols="etc_freq" minfw="1.2.34">
+ 			<Item type="error"><![CDATA[ ( (config12 & 1) == 1 && (y[0] & 1) == 0 && ((y[0] & 224) == 0 || (y[0] & 224) == 32) ) ]]></Item> 
+			<ErrorDetail><![CDATA[ <b>ETC frequency selection invalid!</b><br> 
+			<br>To adjust, please check "PWM Frequency" in dialog: <a href="etcSettings">"Base Setup/ETC Settings"</a> ]]>
+			</ErrorDetail>
+		</Rule>
+		
+	</Validate>
+<!--
+
+-->
+
+	<ReplaceRules>
+		<Item key="iac_cold_celsius">142/255*iac_cold_idle_temp+60</Item>
+		<Item key="iac_warm_celsius">142/255*iac_warm_idle_temp+60</Item>
+		<Item key="ego_coolant_celsius">142/255*ego_coolant+60</Item>
+		<Item key="water_pump_celsius">142/255*water_pump_temp+60</Item> 
+		
+		<Item key="tooth_wheel_twidth[0]">tooth_wheel_twidth2</Item>
+		<Item key="tooth_wheel_twidth[1]">tooth_wheel_twidth1</Item>
+		
+		<Item key="anytrim1_in"><![CDATA[ (anytrim1 & 15) ]]></Item>
+		<Item key="anytrim1_type"><![CDATA[ (anytrim1 & 240) ]]></Item>
+		<Item key="anytrim2_in"><![CDATA[ (anytrim2 & 15) ]]></Item>
+		<Item key="anytrim2_type"><![CDATA[ (anytrim2 & 240) ]]></Item>
+		<Item key="anytrim3_in"><![CDATA[ (anytrim3 & 15) ]]></Item>
+		<Item key="anytrim3_type"><![CDATA[ (anytrim3 & 240) ]]></Item>
+
+		<Item key="ignchmax"><![CDATA[ (ignchmax & 7) ]]></Item>
+	</ReplaceRules>
+
+<!--
+Upgrade active when
+note cfg fw version < then fw="1.1.76"
+ecu version >= fw
+-->
+	<FwRules>
+		<Item fw="1.1.50">
+			<Rule key="fan_temp">		
+<!--
+old:
+	fan_temp		= scalar,	U08,	71,	"°C",	0.555,	-72,	-40,	102.0,	0
+	fan_hyst		= scalar,	U08,	72,	"°C",	1.0,	0.555,	0.0,	141.525,	0 (seems wrong)
+	fan_hyst		= scalar,	U08,	72,	"°C",	0.555,	0,		0.0,	141.525,	0 (old supposed)
+new:
+	fan_temp		= scalar,	U08,	71,	"°C",	1,	-100,	-40,	155.0,	0
+	fan_hyst		= scalar,	U08,	72,	"°C",	1,	0.0,	0.0,	50,	0
+-->	
+				<Upgrade><![CDATA[  0.555 - fan_temp + 60 ]]></Upgrade>
+			</Rule>
+<!--
+			<Rule key="fan_hyst">
+				<Upgrade><![CDATA[  0.555 * fan_hyst ]]></Upgrade>
+			</Rule>
+-->
+		</Item>
+		<Item fw="1.1.51">
+			<Rule key="warmup_clt[0]">
+				<Upgrade><![CDATA[ (warmup_clt[0] < 100) ? 0 : ((warmup_clt[0] > 199) ? 255 : (2.56 * warmup_clt[0] - 256)) ]]></Upgrade>
+			</Rule>
+			<Rule key="warmup_clt[1]">
+				<Upgrade><![CDATA[ (warmup_clt[1] < 100) ? 0 : ((warmup_clt[1] > 199) ? 255 : (2.56 * warmup_clt[1] - 256)) ]]></Upgrade>
+			</Rule>
+			<Rule key="warmup_clt[2]">
+				<Upgrade><![CDATA[ (warmup_clt[2] < 100) ? 0 : ((warmup_clt[2] > 199) ? 255 : (2.56 * warmup_clt[2] - 256)) ]]></Upgrade>
+			</Rule>
+			<Rule key="warmup_clt[3]">
+				<Upgrade><![CDATA[ (warmup_clt[3] < 100) ? 0 : ((warmup_clt[3] > 199) ? 255 : (2.56 * warmup_clt[3] - 256)) ]]></Upgrade>
+			</Rule>
+			<Rule key="warmup_clt[4]">
+				<Upgrade><![CDATA[ (warmup_clt[4] < 100) ? 0 : ((warmup_clt[4] > 199) ? 255 : (2.56 * warmup_clt[4] - 256)) ]]></Upgrade>
+			</Rule>
+			<Rule key="warmup_clt[5]">
+				<Upgrade><![CDATA[ (warmup_clt[5] < 100) ? 0 : ((warmup_clt[5] > 199) ? 255 : (2.56 * warmup_clt[5] - 256)) ]]></Upgrade>
+			</Rule>
+			<Rule key="warmup_clt[6]">
+				<Upgrade><![CDATA[ (warmup_clt[6] < 100) ? 0 : ((warmup_clt[6] > 199) ? 255 : (2.56 * warmup_clt[6] - 256)) ]]></Upgrade>
+			</Rule>
+			<Rule key="warmup_clt[7]">
+				<Upgrade><![CDATA[ (warmup_clt[7] < 100) ? 0 : ((warmup_clt[7] > 199) ? 255 : (2.56 * warmup_clt[7] - 256)) ]]></Upgrade>
+			</Rule>
+			<Rule key="warmup_clt[8]">
+				<Upgrade><![CDATA[ (warmup_clt[8] < 100) ? 0 : ((warmup_clt[8] > 199) ? 255 : (2.56 * warmup_clt[8] - 256)) ]]></Upgrade>
+			</Rule>
+			<Rule key="warmup_clt[9]">
+				<Upgrade><![CDATA[ (warmup_clt[9] < 100) ? 0 : ((warmup_clt[9] > 199) ? 255 : (2.56 * warmup_clt[9] - 256)) ]]></Upgrade>
+			</Rule>
+		</Item>
+	
+		<Item fw="1.1.76">
+			<Rule key="config12">
+	
+				<!-- dirac elimination default disable -->
+				<Upgrade><![CDATA[ (config12 & 63) ]]></Upgrade>
+			</Rule>
+		</Item>
+
+		<Item fw="1.1.92">
+			<Rule key="strig_validation">
+				<!-- ls-1 forgiving bit default disable-->
+				<Upgrade><![CDATA[ (strig_validation & (255-32) ) ]]></Upgrade>
+			</Rule>
+		</Item>
+		
+		<Item fw="1.1.94">
+			<Rule key="vvti_cold">
+				<!-- extra 3rd trigger bit default disable-->
+				<Upgrade><![CDATA[ (vvti_cold & (255-8) ) ]]></Upgrade>
+			</Rule>
+		</Item>
+		
+		<Item fw="1.1.96">
+			<Rule key="strig_validation">
+				<!-- extrapulse trigger bit default disable-->
+				<Upgrade><![CDATA[ (strig_validation & (255-8) ) ]]></Upgrade>
+			</Rule>
+		</Item>
+		<Item fw="1.1.97">
+			<Rule key="strig_validation">
+				<!-- nissan trigger bit default disable-->
+				<Upgrade><![CDATA[ (strig_validation & (255-4) ) ]]></Upgrade>
+			</Rule>	
+		</Item>
+		
+		<Item fw="1.2.1">
+			<Rule key="toothrel_missing">
+				<!-- Audi div by 3 -->
+				<Upgrade><![CDATA[ (( primary_trigger & (32 + 64 + 128)  ) == 64 ) ? 2 : toothrel_missing ]]></Upgrade>
+			</Rule>
+			<Rule key="primary_trigger">
+				<!-- Audi div by 3 -->
+				<Upgrade><![CDATA[ (( primary_trigger & (32 + 64 + 128)  ) == 64 ) ? ( primary_trigger | 128 ) : primary_trigger  ]]></Upgrade>
+			</Rule>
+		</Item>
+		
+		<Item fw="1.2.1">
+			<Rule key="wbo2_ri_target">
+				<Upgrade><![CDATA[ (wbo2_ri_target < 175) ? 180 :  wbo2_ri_target ]]></Upgrade>
+			</Rule>	
+		</Item>
+		
+		<Item fw="1.2.32">
+			<Rule key="config11">
+				<!-- ignlambdaYaxisKpaLoad default = kPa -->
+				<Upgrade><![CDATA[ (config11 & (255-8)) ]]></Upgrade>
+			</Rule>	
+		</Item>
+		
+<!-- 	
+		<Item fw="1.2.23">
+			auto fill CLT/MAP Ign. Adjust table with save values, when upgrading from pre 1.2.23 fw 
+			
+			apply values from default_config_1.2.23	
+			s[2]=80 80 80 80 80 80 80 80
+			s[3]=80 80 80 80 80 80 80 80
+			s[4]=3C 96 B9 DC 0A 23 3C 5A 
+			
+			<Rule key="s[16]">
+				<Upgrade><![CDATA[ 128 ]]></Upgrade>
+			</Rule>	
+			<Rule key="s[17]">
+				<Upgrade><![CDATA[ 128 ]]></Upgrade>
+			</Rule>	
+			<Rule key="s[18]">
+				<Upgrade><![CDATA[ 128 ]]></Upgrade>
+			</Rule>	
+			<Rule key="s[19]">
+				<Upgrade><![CDATA[ 128 ]]></Upgrade>
+			</Rule>	
+			<Rule key="s[20]">
+				<Upgrade><![CDATA[ 128 ]]></Upgrade>
+			</Rule>	
+			<Rule key="s[21]">
+				<Upgrade><![CDATA[ 128 ]]></Upgrade>
+			</Rule>	
+			<Rule key="s[22]">
+				<Upgrade><![CDATA[ 128 ]]></Upgrade>
+			</Rule>	
+			<Rule key="s[23]">
+				<Upgrade><![CDATA[ 128 ]]></Upgrade>
+			</Rule>	
+			<Rule key="s[24]">
+				<Upgrade><![CDATA[ 128 ]]></Upgrade>
+			</Rule>	
+			<Rule key="s[25]">
+				<Upgrade><![CDATA[ 128 ]]></Upgrade>
+			</Rule>	
+			<Rule key="s[26]">
+				<Upgrade><![CDATA[ 128 ]]></Upgrade>
+			</Rule>	
+			<Rule key="s[27]">
+				<Upgrade><![CDATA[ 128 ]]></Upgrade>
+			</Rule>	
+			<Rule key="s[28]">
+				<Upgrade><![CDATA[ 128 ]]></Upgrade>
+			</Rule>	
+			<Rule key="s[29]">
+				<Upgrade><![CDATA[ 128 ]]></Upgrade>
+			</Rule>	
+			<Rule key="s[30]">
+				<Upgrade><![CDATA[ 128 ]]></Upgrade>
+			</Rule>	
+			<Rule key="s[31]">
+				<Upgrade><![CDATA[ 128 ]]></Upgrade>
+			</Rule>	
+			
+			auto fill CLT/MAP Ign. Adjust table CLT header with save values, when upgrading from pre 1.2.23 fw
+			<Rule key="s[32]">
+				<Upgrade><![CDATA[ 60 ]]></Upgrade>
+			</Rule>	
+			<Rule key="s[33]">
+				<Upgrade><![CDATA[ 150 ]]></Upgrade>
+			</Rule>	
+			<Rule key="s[34]">
+				<Upgrade><![CDATA[ 185 ]]></Upgrade>
+			</Rule>	
+			<Rule key="s[35]">
+				<Upgrade><![CDATA[ 220 ]]></Upgrade>
+			</Rule>	
+			
+			auto fill CLT/MAP Ign. Adjust table MAP header with save values, when upgrading from pre 1.2.23 fw 
+			<Rule key="s[36]">
+				<Upgrade><![CDATA[ 10 ]]></Upgrade>
+			</Rule>	
+			<Rule key="s[37]">
+				<Upgrade><![CDATA[ 35 ]]></Upgrade>
+			</Rule>	
+			<Rule key="s[38]">
+				<Upgrade><![CDATA[ 60 ]]></Upgrade>
+			</Rule>	
+			<Rule key="s[39]">
+				<Upgrade><![CDATA[ 90 ]]></Upgrade>
+			</Rule>	
+		</Item>
+-->
+		
+	</FwRules>
+
+</ConfigCriteria>

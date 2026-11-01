@@ -1,0 +1,48 @@
+# VemsTune 1.5.46 "Config Sanity check" on the emu-cli emulator (fw 1.2.34, vemsTune-v3-1.2.34.ini), 2026-11-01.
+# Emulator pages: ecu 0..17 = 50 + ((i*5 + ecu*13) % 150), EEPROM = zeros; VemsTune then wrote ecu 10 [0xD0] = 0xA8.
+# Format: icon|Name|Message   (icon 0 = warning, 1 = error, 2 = info/summary)
+0|wbo2_pump_pw_zero|wbo2_pump_pw_zero typical value should be between 95 and 106!
+0|wbo2_pump_pw_zero2|wbo2_pump_pw_zero2 typical value should be between 95 and 106!
+0|wbo2_nernstdc_target2|wbo2_nernstdc_target2 typical value should be between 128 and 140!
+0|egoCorrection|Ego Rich limit should be less then 15 and Lean limit should be less then 25
+0|batt_cal|batt_cal typical value should be between 176 and 200!
+1|egt1_cal|egt1_cal typical value should be between 74 and 80!
+0|Afterstart enrichment value|Afterstart enrichment is too high
+1|Coolant bin order|Coolant bin must be in strictly monotonous ascending order!
+0|Coolant last enrich|Coolant last enrichment!
+1|Table header order|VE table KPA header (j[k]): must be in strictly monotonous ascending order!
+1|Table header order|Lambda table RPM header (l[r]): must be in strictly monotonous ascending order!
+1|Table header order|Launch RPM Curve X value(s) (roadspeed or time): must be in strictly monotonous ascending order!
+0|tooth_wheel_twidth|Please check tooth_wheel_twidth!
+0|tooth_wheel|Please check Number Of Teeth On Wheel
+0|isThirdTrigger|3rd trigger enabled
+0|film_coeff|Fuel film enabled
+0|fuelcut_min_kpa|FuelCut min kPa too high
+0|engine_off_delay|Engine off delay (Fuel Pump off after inactivity) too high
+0|IAC integral lowmap|Please check IAC Integral low map
+0|ign_dwellmap|Please check Coil Charge Time MAP Scale
+0|iac_minpwm|Please check IAC min pwm
+0|Hard Spark Cut limit|Please check Hard Spark Cut limit
+0|strig_ls1|Please check Ls-1 config bit
+0|nonve_kpalookup_minkpa|Please check: nonve_kpalookup_minkpa
+0|Sec. trigger HALL dirac filter|Please check: Sec. trigger HALL dirac filter
+0|Wideband sensor type|Make sure your LSU sensor type selection is valid
+1|Spark delay|Spark delay is greater than 3 degree
+1|Injector Output Collision|Each Injector output can be assigned to just ONE injector group!
+1|Reference tooth table invalid|Reference tooth difference needs to be equal to next trigger tooth!
+0|Secondary trigger validation is enabled|Secondary trigger validation is not recommended!
+0|Config switch enabled!|Config switch enabled!
+0|Adjustable fuel cut enabled|Please check Adjustable Fuel Cut
+0|Adjustable fuel cut enabled|Please check Adjustable Fuel Cut
+1|Adjustable fuel cut misconfigured|Please check Adjustable partial Fuel Cut
+0|Auditrigger DivBy3|Audi trigger divby3 enabled!
+1|wbo2_ri_target|Please check wbo2_ri_target
+1|wbo2_ri_target2|Please check wbo2_ri_target2
+0|iacIgnAdvLim|Advance Change max Advance should be less than or equal 4 degrees
+0|iacIgnRetLim|Advance Change max Retard should be less than or equal 6 degrees
+1|ignlambdaYaxisKpaLoad|ignlambdaYaxisKpaLoad = Load is for expert use only
+0|ETC control|ETC control enabled, EXPERTS only
+2|Validation summary|Number of rules: 90, Number of passed rules: 49, Number of warning: 29, Number of error: 12
+1|Channel collisions|5 channels are in conflicting state
+1|Invalid channels|12 channels are not set correctly
+1|Invalid values|Invalid values

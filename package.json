@@ -1,0 +1,44 @@
+{
+  "name": "tune-studio",
+  "version": "1.0.0",
+  "description": "Browser-based ECU tuning suite for VEMS engine management — live gauges, tables, curves, datalogging and firmware tools over Web Serial.",
+  "license": "MIT",
+  "author": "fixral3d",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @vems/tuner",
+    "build": "npm run build -w @vems/core && npm run build -w @vems/tuner",
+    "test": "npm test -w @vems/core",
+    "preview": "npm run preview -w @vems/tuner"
+  },
+  "keywords": [
+    "vems",
+    "ecu",
+    "ecu-tuning",
+    "engine-management",
+    "standalone-ecu",
+    "vemstune",
+    "web-serial",
+    "ve-table",
+    "ignition-table",
+    "datalog",
+    "automotive",
+    "car-tuning",
+    "typescript",
+    "react",
+    "vite"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fixral3d/tune-studio.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fixral3d/tune-studio/issues"
+  },
+  "homepage": "https://fixral3d.github.io/tune-studio/"
+}

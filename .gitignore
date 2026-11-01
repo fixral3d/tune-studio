@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Test / coverage
+coverage/
+test-results/
+playwright-report/
+
+# ---------------------------------------------------------------------------
+# Reverse-engineering workbench (local only — large and/or contains
+# third-party copyrighted material; NOT redistributed).
+#   - re/target  : extracted VemsTune binaries (commercial software)
+#   - re/ghidra  : Ghidra project database, decompiler output, run logs
+#   - re/tools   : vendor / helper binaries
+#   - re/evidence: raw capture + extraction evidence
+# Only re/specs/ (our own protocol & format documentation) is published.
+# ---------------------------------------------------------------------------
+re/target/
+re/ghidra/
+re/tools/
+re/evidence/
+re/samples/
+
+# Local working files (not part of the published product)
+.claude/
+HANDOFF.md
+**/HANDOFF.md

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<colors>
+  <!--VemsTune TriggerLogGraph color settings-->
+  <background>#e7dabe</background>
+  <scope>#84c2fb</scope>
+  <textcolor>#000000</textcolor>
+  <event id="1" name="Primary trigger" voffset="3">#133ac1</event>
+  <event id="2" name="Secondary trigger" voffset="10">#ffffff</event>
+  <event id="3" name="Camshaft exhaust" voffset="0">#ff0000</event>
+  <event id="4" name="trigger Nr.4" voffset="0">#00ff00</event>
+  <event id="5" name="trigger Nr.5" voffset="0">#0000ff</event>
+  <event id="6" name="road speed" voffset="0">#ffff00</event>
+  <event id="7" name="road speed2" voffset="0">#8000ff</event>
+  <event id="8" name="Spark Event" voffset="-10">#ff00ff</event>
+  <event id="9" name="TOOTH CNT = 0" voffset="-30">#404040</event>
+  <event id="10" name="trigger Nr.10" voffset="-40">#ff8040</event>
+  <event id="11" name="trigger Nr.11" voffset="50">#80ff80</event>
+  <event id="12" name="trigger Nr.12" voffset="15">#6464c8</event>
+  <event id="13" name="trigger Nr.13" voffset="30">#cd4269</event>
+  <event id="14" name="trigger Nr.14" voffset="40">#360022</event>
+  <event id="15" name="trigger Nr.15" voffset="0">#4b2258</event>
+  <event id="16" name="trigger Nr.16" voffset="0">#4b2258</event>
+  <event id="17" name="TOO MANY PTRIG" voffset="-30">#ff8000</event>
+  <event id="18" name="LESS PTRIG" voffset="-10">#4b2258</event>
+  <event id="19" name="TOO MANY STRIG" voffset="0">#4b2258</event>
+  <event id="20" name="LESS STRIG" voffset="0">#4b2258</event>
+  <event id="21" name="BAD STRIG POS" voffset="0">#4b2258</event>
+  <event id="22" name="TOOTH LENGTH ERROR" voffset="0">#4b2258</event>
+  <event id="23" name="SAFE MODE" voffset="0">#4b2258</event>
+  <event id="24" name="trigger Nr.24" voffset="0">#4b2258</event>
+  <event id="25" name="trigger Nr.25" voffset="0">#4b2258</event>
+  <event id="26" name="trigger Nr.26" voffset="0">#4b2258</event>
+  <event id="27" name="trigger Nr.27" voffset="0">#4b2258</event>
+  <event id="28" name="trigger Nr.28" voffset="0">#4b2258</event>
+  <event id="29" name="trigger Nr.29" voffset="0">#4b2258</event>
+  <event id="30" name="trigger Nr.30" voffset="0">#4b2258</event>
+  <event id="31" name="trigger Nr.31" voffset="0">#4b2258</event>
+  <event id="64" name="data+timestamp1" voffset="0">#0a0a0a</event>
+  <event id="65" name="data+timestamp2" voffset="0">#0a0a0a</event>
+  <event id="66" name="data+timestamp3" voffset="0">#0a0a0a</event>
+  <event id="67" name="data+timestamp4" voffset="0">#0a0a0a</event>
+  <event id="68" name="data+timestamp5" voffset="0">#0a0a0a</event>
+  <event id="69" name="data+timestamp6" voffset="0">#0a0a0a</event>
+  <event id="70" name="data+timestamp7" voffset="0">#0a0a0a</event>
+  <event id="71" name="data+timestamp8" voffset="0">#0a0a0a</event>
+  <event id="72" name="data+timestamp9" voffset="0">#0a0a0a</event>
+  <event id="73" name="data+timestamp10" voffset="0">#0a0a0a</event>
+  <event id="74" name="data+timestamp11" voffset="0">#0a0a0a</event>
+  <event id="75" name="data+timestamp12" voffset="0">#0a0a0a</event>
+  <event id="76" name="data+timestamp13" voffset="0">#0a0a0a</event>
+  <event id="77" name="data+timestamp14" voffset="0">#0a0a0a</event>
+  <event id="78" name="data+timestamp15" voffset="0">#0a0a0a</event>
+  <event id="80" name="IGN0_RISING" voffset="0">#ff8040</event>
+  <event id="81" name="IGN1_RISING" voffset="0">#ff8040</event>
+  <event id="82" name="IGN2_RISING" voffset="0">#ff8040</event>
+  <event id="83" name="IGN3_RISING" voffset="0">#ff8040</event>
+  <event id="84" name="IGN4_RISING" voffset="0">#ff8040</event>
+  <event id="85" name="IGN5_RISING" voffset="0">#ff8040</event>
+  <event id="86" name="IGN6_RISING" voffset="0">#ff8040</event>
+  <event id="87" name="IGN7_RISING" voffset="0">#ff8040</event>
+  <event id="90" name="IGN0_FALLING" voffset="0">#80ff00</event>
+  <event id="91" name="IGN1_FALLING" voffset="0">#80ff00</event>
+  <event id="92" name="IGN2_FALLING" voffset="0">#80ff00</event>
+  <event id="93" name="IGN3_FALLING" voffset="0">#80ff00</event>
+  <event id="94" name="IGN4_FALLING" voffset="0">#80ff00</event>
+  <event id="95" name="IGN5_FALLING" voffset="0">#80ff00</event>
+  <event id="96" name="IGN6_FALLING" voffset="0">#80ff00</event>
+  <event id="97" name="IGN7_FALLING" voffset="0">#80ff00</event>
+</colors>

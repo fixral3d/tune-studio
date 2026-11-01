@@ -1,0 +1,1757 @@
+{
+ "default": "Gold",
+ "gauges": [
+  {
+   "name": "accelEnrichGauge",
+   "channel": "accDecEnrich",
+   "unit": "%",
+   "lo": 50.0,
+   "hi": 150.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": []
+  },
+  {
+   "name": "adjustGauge",
+   "channel": "adjust",
+   "unit": "",
+   "lo": 0.0,
+   "hi": 24.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 2,
+   "labelDigits": 2,
+   "areas": []
+  },
+  {
+   "name": "afrGauge",
+   "channel": "afr",
+   "unit": "",
+   "lo": 10.0,
+   "hi": 19.4,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 2,
+   "labelDigits": 2,
+   "areas": [
+    {
+     "min": 10.0,
+     "max": 12.0,
+     "color": "danger"
+    },
+    {
+     "min": 12.0,
+     "max": 13.0,
+     "color": "warning"
+    },
+    {
+     "min": 15.0,
+     "max": 16.0,
+     "color": "warning"
+    },
+    {
+     "min": 16.0,
+     "max": 19.4,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "als_igncutGauge",
+   "channel": "als_igncut",
+   "unit": "%",
+   "lo": 0.0,
+   "hi": 100.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 1,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 1.0,
+     "max": 50.0,
+     "color": "warning"
+    },
+    {
+     "min": 50.0,
+     "max": 100.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "boostDCGauge",
+   "channel": "boost_dc",
+   "unit": "",
+   "lo": 0.0,
+   "hi": 255.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 1,
+   "labelDigits": 1,
+   "areas": []
+  },
+  {
+   "name": "boostIntGauge",
+   "channel": "boost_integral",
+   "unit": "",
+   "lo": -128.0,
+   "hi": 127.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 1,
+   "labelDigits": 1,
+   "areas": []
+  },
+  {
+   "name": "boostTgtGauge",
+   "channel": "boost_tgt",
+   "unit": "kPa",
+   "lo": 0.0,
+   "hi": 512.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 1,
+   "labelDigits": 1,
+   "areas": [
+    {
+     "min": 300.0,
+     "max": 320.0,
+     "color": "warning"
+    },
+    {
+     "min": 320.0,
+     "max": 512.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "clockGauge",
+   "channel": "secl",
+   "unit": "s",
+   "lo": 0.0,
+   "hi": 256.0,
+   "major": 4,
+   "minor": 8,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 0.0,
+     "max": 10.0,
+     "color": "danger"
+    },
+    {
+     "min": 245.0,
+     "max": 256.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "clockGauge180",
+   "channel": "secl",
+   "unit": "s",
+   "lo": 0.0,
+   "hi": 256.0,
+   "major": 6,
+   "minor": 3,
+   "start": 180.0,
+   "end": 0.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 0.0,
+     "max": 10.0,
+     "color": "danger"
+    },
+    {
+     "min": 10.0,
+     "max": 20.0,
+     "color": "warning"
+    },
+    {
+     "min": 235.0,
+     "max": 245.0,
+     "color": "danger"
+    },
+    {
+     "min": 245.0,
+     "max": 256.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "clockGauge90",
+   "channel": "secl",
+   "unit": "s",
+   "lo": 0.0,
+   "hi": 256.0,
+   "major": 4,
+   "minor": 2,
+   "start": 90.0,
+   "end": 180.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 0.0,
+     "max": 10.0,
+     "color": "danger"
+    },
+    {
+     "min": 10.0,
+     "max": 20.0,
+     "color": "warning"
+    },
+    {
+     "min": 235.0,
+     "max": 245.0,
+     "color": "danger"
+    },
+    {
+     "min": 245.0,
+     "max": 256.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "Coolant \u00b0C",
+   "channel": "coolant",
+   "unit": "\u00b0C",
+   "lo": 0.0,
+   "hi": 120.0,
+   "major": 12,
+   "minor": 1,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 0.0,
+     "max": 10.0,
+     "color": "danger"
+    },
+    {
+     "min": 10.0,
+     "max": 70.0,
+     "color": "warning"
+    },
+    {
+     "min": 95.0,
+     "max": 105.0,
+     "color": "warning"
+    },
+    {
+     "min": 105.0,
+     "max": 120.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "Coolant \u00b0F",
+   "channel": "coolant",
+   "unit": "\u00b0F",
+   "lo": -40.0,
+   "hi": 225.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": -40.0,
+     "max": 0.0,
+     "color": "danger"
+    },
+    {
+     "min": 0.0,
+     "max": 30.0,
+     "color": "warning"
+    },
+    {
+     "min": 200.0,
+     "max": 220.0,
+     "color": "warning"
+    }
+   ]
+  },
+  {
+   "name": "deadGauge",
+   "channel": "deadValue",
+   "unit": "",
+   "lo": 0.0,
+   "hi": 1.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": []
+  },
+  {
+   "name": "dutyCycleGauge",
+   "channel": "dutyCycle",
+   "unit": "%",
+   "lo": 0.0,
+   "hi": 100.0,
+   "major": 10,
+   "minor": 2,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 1,
+   "labelDigits": 1,
+   "areas": [
+    {
+     "min": 90.0,
+     "max": 95.0,
+     "color": "warning"
+    },
+    {
+     "min": 95.0,
+     "max": 100.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "dwellGauge",
+   "channel": "dwell",
+   "unit": "mS",
+   "lo": 0.0,
+   "hi": 5.0,
+   "major": 5,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 2,
+   "labelDigits": 0,
+   "areas": []
+  },
+  {
+   "name": "egoCorrGauge",
+   "channel": "egoCorrection",
+   "unit": "%",
+   "lo": 50.0,
+   "hi": 150.0,
+   "major": 10,
+   "minor": 2,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 50.0,
+     "max": 90.0,
+     "color": "danger"
+    },
+    {
+     "min": 90.0,
+     "max": 99.0,
+     "color": "warning"
+    },
+    {
+     "min": 101.0,
+     "max": 110.0,
+     "color": "warning"
+    },
+    {
+     "min": 110.0,
+     "max": 150.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "egoGauge",
+   "channel": "egoVoltage",
+   "unit": "V",
+   "lo": 0.5,
+   "hi": 4.5,
+   "major": 8,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 2,
+   "labelDigits": 2,
+   "areas": []
+  },
+  {
+   "name": "egt1Gauge",
+   "channel": "egt",
+   "unit": "\u00b0C",
+   "lo": 0.0,
+   "hi": 1200.0,
+   "major": 12,
+   "minor": 1,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 800.0,
+     "max": 900.0,
+     "color": "warning"
+    },
+    {
+     "min": 900.0,
+     "max": 1200.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "gammaEnrichGauge",
+   "channel": "gammaEnrich",
+   "unit": "%",
+   "lo": 50.0,
+   "hi": 150.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": []
+  },
+  {
+   "name": "gpsCourse",
+   "channel": "course",
+   "unit": "",
+   "lo": 0.0,
+   "hi": 999.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 0.0,
+     "max": 999.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "gpsDistanceSum",
+   "channel": "distanceSum",
+   "unit": "",
+   "lo": 0.0,
+   "hi": 999999.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 0.0,
+     "max": 999999.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "gpsHeight",
+   "channel": "height",
+   "unit": "",
+   "lo": 0.0,
+   "hi": 99999.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 0.0,
+     "max": 99999.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "gpsLatitudeDec",
+   "channel": "latitudeDec",
+   "unit": "",
+   "lo": 0.0,
+   "hi": 999.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 0.0,
+     "max": 999.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "gpsLongitudeDec",
+   "channel": "longitudeDec",
+   "unit": "",
+   "lo": 0.0,
+   "hi": 999.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 0.0,
+     "max": 999.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "gpsSpeedGauge",
+   "channel": "gpsSpeed",
+   "unit": "km/h",
+   "lo": 0.0,
+   "hi": 200.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 120.0,
+     "max": 160.0,
+     "color": "warning"
+    },
+    {
+     "min": 160.0,
+     "max": 200.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "High Boost Map Gauge",
+   "channel": "map",
+   "unit": "kPa",
+   "lo": 0.0,
+   "hi": 300.0,
+   "major": 6,
+   "minor": 2,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 0.0,
+     "max": 20.0,
+     "color": "warning"
+    },
+    {
+     "min": 100.0,
+     "max": 200.0,
+     "color": "warning"
+    },
+    {
+     "min": 200.0,
+     "max": 300.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "High Boost Map Gauge right",
+   "channel": "map",
+   "unit": "kPa",
+   "lo": 0.0,
+   "hi": 300.0,
+   "major": 5,
+   "minor": 10,
+   "start": 212.0,
+   "end": 435.0,
+   "digits": 1,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 0.0,
+     "max": 20.0,
+     "color": "warning"
+    },
+    {
+     "min": 100.0,
+     "max": 200.0,
+     "color": "warning"
+    },
+    {
+     "min": 200.0,
+     "max": 300.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "iacDCGauge",
+   "channel": "idleDC",
+   "unit": "%",
+   "lo": 0.0,
+   "hi": 100.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 1,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 85.0,
+     "max": 90.0,
+     "color": "warning"
+    },
+    {
+     "min": 90.0,
+     "max": 100.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "iacIntGauge",
+   "channel": "iac_integral_signed",
+   "unit": "",
+   "lo": -160.0,
+   "hi": 80.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 1,
+   "labelDigits": 0,
+   "areas": []
+  },
+  {
+   "name": "knock_cyl_0_adjust_Gauge",
+   "channel": "knock_cyl_0_adjust",
+   "unit": "Deg",
+   "lo": 0.0,
+   "hi": 55.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 0.0,
+     "max": 3.0,
+     "color": "danger"
+    },
+    {
+     "min": 3.0,
+     "max": 4.0,
+     "color": "warning"
+    },
+    {
+     "min": 50.0,
+     "max": 55.0,
+     "color": "warning"
+    }
+   ]
+  },
+  {
+   "name": "knock_cyl_0_diff_Gauge",
+   "channel": "knock_cyl_0_diff",
+   "unit": "",
+   "lo": 0.0,
+   "hi": 10.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 2,
+   "labelDigits": 2,
+   "areas": []
+  },
+  {
+   "name": "knockGauge",
+   "channel": "knock",
+   "unit": "",
+   "lo": 0.0,
+   "hi": 1020.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 2,
+   "labelDigits": 2,
+   "areas": []
+  },
+  {
+   "name": "l_100kmGauge",
+   "channel": "l_100km",
+   "unit": "l/100km",
+   "lo": 0.0,
+   "hi": 30.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 1,
+   "labelDigits": 1,
+   "areas": [
+    {
+     "min": 17.0,
+     "max": 25.0,
+     "color": "warning"
+    },
+    {
+     "min": 25.0,
+     "max": 30.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "lambdaGauge",
+   "channel": "lambda",
+   "unit": "\u03bb",
+   "lo": 0.7,
+   "hi": 1.2,
+   "major": 5,
+   "minor": 2,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 2,
+   "labelDigits": 2,
+   "areas": [
+    {
+     "min": 0.84,
+     "max": 0.86,
+     "color": "danger"
+    },
+    {
+     "min": 0.8,
+     "max": 0.84,
+     "color": "warning"
+    },
+    {
+     "min": 1.0,
+     "max": 1.1,
+     "color": "warning"
+    }
+   ]
+  },
+  {
+   "name": "lphrGauge",
+   "channel": "lphr",
+   "unit": "l / h",
+   "lo": 1.0,
+   "hi": 50.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 1,
+   "labelDigits": 1,
+   "areas": [
+    {
+     "min": 20.0,
+     "max": 30.0,
+     "color": "warning"
+    },
+    {
+     "min": 30.0,
+     "max": 50.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "matGauge",
+   "channel": "mat",
+   "unit": "\u00b0C",
+   "lo": 0.0,
+   "hi": 80.0,
+   "major": 8,
+   "minor": 2,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 60.0,
+     "max": 70.0,
+     "color": "warning"
+    },
+    {
+     "min": 70.0,
+     "max": 80.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "miscGauge",
+   "channel": "misc",
+   "unit": "V",
+   "lo": 0.5,
+   "hi": 4.5,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 2,
+   "labelDigits": 2,
+   "areas": []
+  },
+  {
+   "name": "Normal Map Gauge",
+   "channel": "map",
+   "unit": "kPa",
+   "lo": 0.0,
+   "hi": 120.0,
+   "major": 4,
+   "minor": 12,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 1,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 0.0,
+     "max": 20.0,
+     "color": "warning"
+    },
+    {
+     "min": 100.0,
+     "max": 110.0,
+     "color": "warning"
+    },
+    {
+     "min": 110.0,
+     "max": 120.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "Pressures",
+   "channel": "pressure",
+   "unit": "V",
+   "lo": 0.5,
+   "hi": 4.5,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 2,
+   "labelDigits": 2,
+   "areas": []
+  },
+  {
+   "name": "pulseWidthGauge",
+   "channel": "pulseWidth",
+   "unit": "mS",
+   "lo": 0.0,
+   "hi": 25.5,
+   "major": 8,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 0.0,
+     "max": 1.0,
+     "color": "danger"
+    },
+    {
+     "min": 1.0,
+     "max": 1.2,
+     "color": "warning"
+    },
+    {
+     "min": 20.0,
+     "max": 25.0,
+     "color": "warning"
+    },
+    {
+     "min": 25.0,
+     "max": 25.5,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "Relative Map Gauge",
+   "channel": "mapRel",
+   "unit": "kPa",
+   "lo": -160.0,
+   "hi": 160.0,
+   "major": 5,
+   "minor": 10,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 1,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": -160.0,
+     "max": -100.0,
+     "color": "danger"
+    },
+    {
+     "min": -100.0,
+     "max": -60.0,
+     "color": "warning"
+    },
+    {
+     "min": 60.0,
+     "max": 100.0,
+     "color": "warning"
+    },
+    {
+     "min": 100.0,
+     "max": 160.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "rpmdiffGauge",
+   "channel": "rpmdiff",
+   "unit": "uS",
+   "lo": -512.0,
+   "hi": 512.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 1,
+   "labelDigits": 1,
+   "areas": [
+    {
+     "min": -512.0,
+     "max": -255.0,
+     "color": "danger"
+    },
+    {
+     "min": -255.0,
+     "max": -30.0,
+     "color": "warning"
+    },
+    {
+     "min": 30.0,
+     "max": 255.0,
+     "color": "warning"
+    },
+    {
+     "min": 255.0,
+     "max": 512.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "rtestGauge",
+   "channel": "rtest",
+   "unit": "uS",
+   "lo": -512.0,
+   "hi": 512.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 1,
+   "labelDigits": 1,
+   "areas": [
+    {
+     "min": -512.0,
+     "max": -255.0,
+     "color": "danger"
+    },
+    {
+     "min": -255.0,
+     "max": -30.0,
+     "color": "warning"
+    },
+    {
+     "min": 30.0,
+     "max": 255.0,
+     "color": "warning"
+    },
+    {
+     "min": 255.0,
+     "max": 512.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "sparkGauge",
+   "channel": "spark",
+   "unit": "\u00b0",
+   "lo": -40.0,
+   "hi": 40.0,
+   "major": 8,
+   "minor": 2,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 2,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": -40.0,
+     "max": -30.0,
+     "color": "danger"
+    },
+    {
+     "min": -30.0,
+     "max": 0.0,
+     "color": "warning"
+    },
+    {
+     "min": 30.0,
+     "max": 35.0,
+     "color": "warning"
+    },
+    {
+     "min": 35.0,
+     "max": 40.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "speedGauge",
+   "channel": "roadSpeed",
+   "unit": "km/h",
+   "lo": 0.0,
+   "hi": 200.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 1,
+   "labelDigits": 1,
+   "areas": [
+    {
+     "min": 120.0,
+     "max": 160.0,
+     "color": "warning"
+    },
+    {
+     "min": 160.0,
+     "max": 200.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "stallO2Gauge",
+   "channel": "stallO2",
+   "unit": "%",
+   "lo": 0.0,
+   "hi": 30.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": []
+  },
+  {
+   "name": "tachometer",
+   "channel": "rpm",
+   "unit": "RPM",
+   "lo": 0.0,
+   "hi": 8000.0,
+   "major": 8,
+   "minor": 2,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 0.0,
+     "max": 300.0,
+     "color": "danger"
+    },
+    {
+     "min": 300.0,
+     "max": 600.0,
+     "color": "warning"
+    },
+    {
+     "min": 7000.0,
+     "max": 7200.0,
+     "color": "warning"
+    },
+    {
+     "min": 7200.0,
+     "max": 8000.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "tachometer-left",
+   "channel": "rpm",
+   "unit": "RPM",
+   "lo": 0.0,
+   "hi": 8000.0,
+   "major": 8,
+   "minor": 4,
+   "start": 110.0,
+   "end": 330.0,
+   "digits": 1,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 0.0,
+     "max": 300.0,
+     "color": "danger"
+    },
+    {
+     "min": 300.0,
+     "max": 600.0,
+     "color": "warning"
+    },
+    {
+     "min": 6000.0,
+     "max": 7000.0,
+     "color": "warning"
+    },
+    {
+     "min": 7000.0,
+     "max": 8000.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "tachometer-right",
+   "channel": "rpm",
+   "unit": "RPM",
+   "lo": 0.0,
+   "hi": 8000.0,
+   "major": 8,
+   "minor": 4,
+   "start": 210.0,
+   "end": 430.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 0.0,
+     "max": 300.0,
+     "color": "danger"
+    },
+    {
+     "min": 300.0,
+     "max": 600.0,
+     "color": "warning"
+    },
+    {
+     "min": 6000.0,
+     "max": 7000.0,
+     "color": "warning"
+    },
+    {
+     "min": 7000.0,
+     "max": 8000.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "tachometer44",
+   "channel": "rpm",
+   "unit": "RPM",
+   "lo": 0.0,
+   "hi": 8000.0,
+   "major": 4,
+   "minor": 6,
+   "start": 51.0,
+   "end": 309.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 0.0,
+     "max": 300.0,
+     "color": "danger"
+    },
+    {
+     "min": 300.0,
+     "max": 600.0,
+     "color": "warning"
+    },
+    {
+     "min": 6000.0,
+     "max": 7000.0,
+     "color": "warning"
+    },
+    {
+     "min": 7000.0,
+     "max": 8000.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "throttleGauge",
+   "channel": "throttle",
+   "unit": "%",
+   "lo": 0.0,
+   "hi": 100.0,
+   "major": 10,
+   "minor": 1,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 90.0,
+     "max": 100.0,
+     "color": "warning"
+    }
+   ]
+  },
+  {
+   "name": "throttleGauge2",
+   "channel": "kpa_tps_blend",
+   "unit": "%",
+   "lo": 0.0,
+   "hi": 510.0,
+   "major": 10,
+   "minor": 4,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 400.0,
+     "max": 450.0,
+     "color": "warning"
+    },
+    {
+     "min": 450.0,
+     "max": 500.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "veGauge",
+   "channel": "veCurr",
+   "unit": "%",
+   "lo": 0.0,
+   "hi": 120.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": []
+  },
+  {
+   "name": "voltMeter",
+   "channel": "batteryVoltage",
+   "unit": "V",
+   "lo": 7.0,
+   "hi": 21.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 7.0,
+     "max": 8.0,
+     "color": "danger"
+    },
+    {
+     "min": 8.0,
+     "max": 9.0,
+     "color": "warning"
+    },
+    {
+     "min": 15.0,
+     "max": 16.0,
+     "color": "warning"
+    },
+    {
+     "min": 16.0,
+     "max": 21.0,
+     "color": "danger"
+    }
+   ]
+  },
+  {
+   "name": "warmupEnrichGauge",
+   "channel": "warmupEnrich",
+   "unit": "%",
+   "lo": 100.0,
+   "hi": 150.0,
+   "major": 10,
+   "minor": 5,
+   "start": 135.0,
+   "end": 405.0,
+   "digits": 0,
+   "labelDigits": 0,
+   "areas": [
+    {
+     "min": 101.0,
+     "max": 105.0,
+     "color": "warning"
+    },
+    {
+     "min": 105.0,
+     "max": 150.0,
+     "color": "danger"
+    }
+   ]
+  }
+ ],
+ "flags": [
+  {
+   "name": "isRunning",
+   "states": [
+    {
+     "value": 0,
+     "text": "Runing Off",
+     "fg": "#FFFFFF",
+     "bg": "#FF0000"
+    },
+    {
+     "value": 1,
+     "text": "Runing On",
+     "fg": "#000000",
+     "bg": "#00FF00"
+    }
+   ]
+  },
+  {
+   "name": "isCranking",
+   "states": [
+    {
+     "value": 0,
+     "text": "Cranking Off",
+     "fg": "#FFFFFF",
+     "bg": "#000000"
+    },
+    {
+     "value": 1,
+     "text": "Cranking On",
+     "fg": "#FFFFFF",
+     "bg": "#FF0000"
+    }
+   ]
+  },
+  {
+   "name": "isRunningOrCranking",
+   "states": [
+    {
+     "value": 0,
+     "text": "Runing Off",
+     "fg": "#FFFFFF",
+     "bg": "#FF0000"
+    },
+    {
+     "value": 1,
+     "text": "Runing On",
+     "fg": "#000000",
+     "bg": "#00FF00"
+    },
+    {
+     "value": 2,
+     "text": "Invalid state",
+     "fg": "#FFFFFF",
+     "bg": "#FF0000"
+    },
+    {
+     "value": 3,
+     "text": "Cranking On",
+     "fg": "#000000",
+     "bg": "#FFFF00"
+    }
+   ]
+  },
+  {
+   "name": "isAfterStart",
+   "states": [
+    {
+     "value": 0,
+     "text": "AfterStart Off",
+     "fg": "#FFFFFF",
+     "bg": "#000000"
+    },
+    {
+     "value": 1,
+     "text": "AfterStart On",
+     "fg": "#FFFFFF",
+     "bg": "#FF0000"
+    }
+   ]
+  },
+  {
+   "name": "isWarmup",
+   "states": [
+    {
+     "value": 0,
+     "text": "Warmup Off",
+     "fg": "#FFFFFF",
+     "bg": "#000000"
+    },
+    {
+     "value": 1,
+     "text": "Warmup On",
+     "fg": "#FFFFFF",
+     "bg": "#FF0000"
+    }
+   ]
+  },
+  {
+   "name": "isAccel",
+   "states": [
+    {
+     "value": 0,
+     "text": "Accel Off",
+     "fg": "#FFFFFF",
+     "bg": "#000000"
+    },
+    {
+     "value": 1,
+     "text": "Accel On",
+     "fg": "#FFFFFF",
+     "bg": "#FF0000"
+    }
+   ]
+  },
+  {
+   "name": "isDecel",
+   "states": [
+    {
+     "value": 0,
+     "text": "Decel Off",
+     "fg": "#FFFFFF",
+     "bg": "#000000"
+    },
+    {
+     "value": 1,
+     "text": "Decel On",
+     "fg": "#FFFFFF",
+     "bg": "#FF0000"
+    }
+   ]
+  },
+  {
+   "name": "isALSActive",
+   "states": [
+    {
+     "value": 0,
+     "text": "ALS Off",
+     "fg": "#FFFFFF",
+     "bg": "#000000"
+    },
+    {
+     "value": 1,
+     "text": "ALS ON",
+     "fg": "#000000",
+     "bg": "#FFFF00"
+    },
+    {
+     "value": 2,
+     "text": "ALS Retard",
+     "fg": "#000000",
+     "bg": "#00FF00"
+    },
+    {
+     "value": 3,
+     "text": "ALS Cut",
+     "fg": "#000000",
+     "bg": "#00FF00"
+    },
+    {
+     "value": 4,
+     "text": "ALS Cut+Ret",
+     "fg": "#000000",
+     "bg": "#00FF00"
+    }
+   ]
+  },
+  {
+   "name": "isLaunch",
+   "states": [
+    {
+     "value": 0,
+     "text": "Launch Off",
+     "fg": "#FFFFFF",
+     "bg": "#000000"
+    },
+    {
+     "value": 1,
+     "text": "Launch On",
+     "fg": "#000000",
+     "bg": "#00FF00"
+    }
+   ]
+  },
+  {
+   "name": "isShiftCut",
+   "states": [
+    {
+     "value": 0,
+     "text": "Shift-Cut Off",
+     "fg": "#FFFFFF",
+     "bg": "#000000"
+    },
+    {
+     "value": 1,
+     "text": "Shift-Cut On",
+     "fg": "#000000",
+     "bg": "#00FF00"
+    }
+   ]
+  },
+  {
+   "name": "isStage2",
+   "states": [
+    {
+     "value": 0,
+     "text": "Stage2 INJ Off",
+     "fg": "#FFFFFF",
+     "bg": "#000000"
+    },
+    {
+     "value": 1,
+     "text": "Stage2 INJ On",
+     "fg": "#FFFFFF",
+     "bg": "#FF0000"
+    }
+   ]
+  },
+  {
+   "name": "isIAC",
+   "states": [
+    {
+     "value": 0,
+     "text": "IAC Off",
+     "fg": "#FFFFFF",
+     "bg": "#000000"
+    },
+    {
+     "value": 1,
+     "text": "IAC On",
+     "fg": "#000000",
+     "bg": "#00FF00"
+    }
+   ]
+  },
+  {
+   "name": "isEGO",
+   "states": [
+    {
+     "value": 0,
+     "text": "EGO Off",
+     "fg": "#FFFFFF",
+     "bg": "#000000"
+    },
+    {
+     "value": 1,
+     "text": "EGO On",
+     "fg": "#000000",
+     "bg": "#00FF00"
+    }
+   ]
+  },
+  {
+   "name": "isTriggerError",
+   "states": [
+    {
+     "value": 0,
+     "text": "No Tr E",
+     "fg": "#000000",
+     "bg": "#00FF00"
+    },
+    {
+     "value": 1,
+     "text": "Tr E",
+     "fg": "#FFFFFF",
+     "bg": "#FF0000"
+    }
+   ]
+  },
+  {
+   "name": "isALS",
+   "states": [
+    {
+     "value": 0,
+     "text": "ALS Off",
+     "fg": "#FFFFFF",
+     "bg": "#000000"
+    },
+    {
+     "value": 1,
+     "text": "ALS On",
+     "fg": "#000000",
+     "bg": "#00FF00"
+    }
+   ]
+  },
+  {
+   "name": "isSparkCut",
+   "states": [
+    {
+     "value": 0,
+     "text": "---",
+     "fg": "#FFFFFF",
+     "bg": "#000000"
+    },
+    {
+     "value": 1,
+     "text": "Spark Cut",
+     "fg": "#FFFFFF",
+     "bg": "#FF0000"
+    }
+   ]
+  },
+  {
+   "name": "isConfsw",
+   "states": [
+    {
+     "value": 0,
+     "text": "Config A",
+     "fg": "#000000",
+     "bg": "#00FF00"
+    },
+    {
+     "value": 1,
+     "text": "Config B",
+     "fg": "#FFFFFF",
+     "bg": "#FF0000"
+    }
+   ]
+  },
+  {
+   "name": "isN2OActive",
+   "states": [
+    {
+     "value": 0,
+     "text": "N2O Off",
+     "fg": "#FFFFFF",
+     "bg": "#000000"
+    },
+    {
+     "value": 1,
+     "text": "N2O On",
+     "fg": "#FFFFFF",
+     "bg": "#FF0000"
+    }
+   ]
+  }
+ ],
+ "themes": [
+  {
+   "name": "Gold",
+   "text": "#FFCC00",
+   "pointer": "rgba(255,204,0,250)",
+   "border": "#FFCC00",
+   "div": "#FFFFFF",
+   "colors": {
+    "danger": "#FF0000",
+    "warning": "#FFCC00",
+    "normal": "#00FF00",
+    "inactive": "#646464"
+   }
+  },
+  {
+   "name": "Silver",
+   "text": "#FFFFFF",
+   "pointer": "rgba(255,204,0,250)",
+   "border": "#797979",
+   "div": "#FFFFFF",
+   "colors": {
+    "danger": "#FF0000",
+    "warning": "#FF8800",
+    "normal": "#00FF88",
+    "inactive": "#646464"
+   }
+  },
+  {
+   "name": "Zafir",
+   "text": "#FFCC00",
+   "pointer": "rgba(255,204,0,250)",
+   "border": "#586814",
+   "div": "#FFFFFF",
+   "colors": {
+    "danger": "#FF0000",
+    "warning": "#FF8800",
+    "normal": "#00FF00",
+    "inactive": "#646464"
+   }
+  },
+  {
+   "name": "Zafir-white",
+   "text": "#0000FF",
+   "pointer": "rgba(71,71,255,250)",
+   "border": "#586814",
+   "div": "#000000",
+   "colors": {
+    "danger": "#FF0000",
+    "warning": "#FF8800",
+    "normal": "#00FF00",
+    "inactive": "#000000"
+   }
+  }
+ ]
+}

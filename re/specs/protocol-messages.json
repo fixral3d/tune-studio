@@ -1,0 +1,1340 @@
+[
+ {
+  "name": "DETECT_PROBE",
+  "mode": "any",
+  "direction": "host->ecu",
+  "bytes": "53 6D 78 63 2E FF 7E",
+  "fields": [],
+  "response": "MT: ASCII containing 'VEMS Genboard v3' etc.; Man: 'Yes, menu and comm worx'; Boot: 'AVREFI1'/'AVR3'/'AVR2'; TF: CRC error frame 02 7F 41 30 7E",
+  "timeout_ms": "m_timeout+256 (~456)",
+  "retries": "2 per baud; up to 3 re-probes on TF CRC error",
+  "source": "DeviceDetector::write @0x00dea744, read @0x00dea7a8, <ctor> @0x00deb674",
+  "area": "core"
+ },
+ {
+  "name": "PASSWORD_QUERY",
+  "mode": "megatune|man",
+  "direction": "host->ecu",
+  "bytes": "2E",
+  "fields": [],
+  "response": "locked: 'BAD pw\\r\\n' + serial matching (\\w\\d.\\d_\\w\\d{6}); unlocked: silence until m_timeout",
+  "timeout_ms": "m_timeout",
+  "source": "PasswordChecker::write @0x00e288c4, waitP @0x00e28a44",
+  "area": "core"
+ },
+ {
+  "name": "PASSWORD_SEND",
+  "mode": "megatune|man",
+  "direction": "host->ecu",
+  "bytes": "ASCII '%04X.' (resolveMagic of password.txt entry)",
+  "fields": [
+   {
+    "name": "pw16",
+    "size": "4 hex chars"
+   }
+  ],
+  "response": "'pwOK'",
+  "timeout_ms": "m_timeout",
+  "source": "PasswordChecker::sendPw @0x00e28460, waitPw @0x00e28908, PasswordHelper::resolveMagic @0x00bae7a0",
+  "area": "core"
+ },
+ {
+  "name": "TF_FRAME",
+  "mode": "triggerframe",
+  "direction": "both",
+  "bytes": "escape(body || crc16_modbus(body) LE) || 7E; escape 7D->7D 5D, 7E->7D 5E",
+  "fields": [
+   {
+    "name": "data",
+    "size": "0..n"
+   },
+   {
+    "name": "value",
+    "size": "0/1/2/4 (1 for F5, 2 BE for F4/F9/FB, else 4: 00 b2 b1 b0)"
+   },
+   {
+    "name": "subtype",
+    "size": "0/1"
+   },
+   {
+    "name": "type",
+    "size": 1
+   }
+  ],
+  "response": "type-0x80 for requests >=0x80",
+  "source": "TriggerFrame::create @0x00e970e8, TriggerFrameEx::create @0x0081eaf8, TriggerFrameFSM::parse @0x0082056c",
+  "area": "core"
+ },
+ {
+  "name": "TF_ERROR",
+  "mode": "triggerframe",
+  "direction": "ecu->host",
+  "type": "0x7F",
+  "bytes": "[reason] [category] 7F",
+  "fields": [
+   {
+    "name": "reason",
+    "size": 1,
+    "note": "1 NO_SUBTYPE/NO_PARAMETER, 2 BAD_SUBTYPE/CANT_GO/BUSY/OVERWRITE, 3..9 TEST_TOOLS missing param"
+   },
+   {
+    "name": "category",
+    "size": 1,
+    "note": "1 UNKNOWN_COMMAND,2 CRC,3 SD_BASE,4 ECU_DETAILS,5 SD_CMD,6 GO_BOOTLOADER,7 CHANGE_BAUD,8 TEST_TOOLS,9 EEPROM_CONTROL,0x0A SRAM_WRITE"
+   }
+  ],
+  "example": "CRC error: 02 7F 41 30 7E",
+  "host_action": "category 2 -> resend same request up to 3x",
+  "source": "TriggerFrame::getErrorSubTypeAsString @0x008196ca, SynchronousHandler::onReceiveTriggerFrame @0x00817a70",
+  "area": "core"
+ },
+ {
+  "name": "READ_ECU_DETAILS",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xF2",
+  "bytes": "[sub] F2",
+  "fields": [
+   {
+    "name": "sub",
+    "size": 1,
+    "values": {
+     "2": "COMPILATION_TIME",
+     "3": "SERIAL_NUMBER",
+     "4": "SIGNATURE (fw options; version regex d.d.dd)",
+     "5": "MTCODEVER (MegaTune INI signature)"
+    }
+   }
+  ],
+  "order": "3,2,5,4",
+  "response": "ASCII text [sub] 72; e.g. sub3 'v3.3_n003361', sub2 '2011-11-24 15:15', sub4 'VEMS Genboard v3, 1.1.98' (+00 5E), sub5 'VEMS v1.1.98 16x14 kpa=2,1'",
+  "timeout_ms": 1000,
+  "retries": 1,
+  "source": "FirmwareInfoHandler::request @0x0081169a, onReceiveTriggerFrame @0x0080fd4c, TriggerFrameTestCommunicationBase::Create*Response @0x00488278..0x00488834",
+  "area": "core"
+ },
+ {
+  "name": "READ_REALTIME",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xA0",
+  "bytes": "A0",
+  "example_wire": "A0 BF 38 7E",
+  "fields": [],
+  "response": "rt[ochBlockSize] 20 (1.2.34: 75 bytes; byte0 = secl seconds counter, must step 0/+1)",
+  "timeout_ms": 1000,
+  "retries": 1,
+  "rate": "back-to-back (2 queued), or every rtDelay ms in delayed mode",
+  "source": "RealtimeHandler::<ctor> @0x00811f24, request @0x00812d6a, onReceiveTriggerFrame @0x0081227a, RealtimeDataChecker::refresh @0x00712836",
+  "area": "core"
+ },
+ {
+  "name": "SRAM_READ_PAGE",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xF4",
+  "bytes": "FF [ecuPageId] F4",
+  "fields": [
+   {
+    "name": "addr",
+    "size": 2,
+    "note": "0xFF00|vt_2_ecu_id"
+   }
+  ],
+  "response": "page[L] FF [ecuPageId] 74 (L = INI page size; data = frame size-3)",
+  "timeout_ms": 1000,
+  "retries": 0,
+  "source": "TriggerFrameFactory::createReadPageTF @0x0081ff2c, createSramAddress @0x0081fedc, SIPRPacketFactory::create @0x00bb9e70",
+  "area": "core"
+ },
+ {
+  "name": "SRAM_READ_RAW",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xF4",
+  "bytes": "[len] [addrHi] [addrLo] F4",
+  "response": "data[len] addrHi addrLo 74",
+  "timeout_ms": 1000,
+  "retries": 1,
+  "source": "TriggerFrameMemoryHandler::readSramSection @0x00822d42, handleSramReadRealtimeRequest @0x0082206e",
+  "area": "core"
+ },
+ {
+  "name": "SRAM_WRITE_BYTE",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xFB",
+  "bytes": "[value] [offset&0xFF] [FF|7F] [ecuPageId] FB",
+  "fields": [
+   {
+    "name": "value",
+    "size": 1
+   },
+   {
+    "name": "offset_lo",
+    "size": 1
+   },
+   {
+    "name": "addr",
+    "size": 2,
+    "note": "0xFF00|id, bit15 cleared when offset>=256"
+   }
+  ],
+  "response": "... 7B",
+  "timeout_ms": 1000,
+  "retries": 0,
+  "source": "TriggerFrameFactory::createWriteTF @0x00820042",
+  "area": "core"
+ },
+ {
+  "name": "EEPROM_READ",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xF5",
+  "bytes": "[idx] F5",
+  "fields": [
+   {
+    "name": "idx",
+    "size": 1,
+    "note": "0x0C for CONFIG_EEPROM page 30"
+   }
+  ],
+  "response": ">64 bytes ... 75; first 64 bytes = CONFIG_EEPROM",
+  "timeout_ms": 1000,
+  "source": "TriggerFrameFactory::createReadEEPROM @0x00820188, createReadPage @0x0081f770",
+  "area": "core"
+ },
+ {
+  "name": "EEPROM_WRITE_BYTE",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xF9",
+  "bytes": "[value] [addrHi] [addrLo] F9",
+  "fields": [
+   {
+    "name": "addr",
+    "size": 2,
+    "note": "0xC0+offset, offset<0x40"
+   }
+  ],
+  "response": "... 79",
+  "source": "TriggerFrameFactory::createWriteEEPROM @0x0082025a",
+  "area": "core"
+ },
+ {
+  "name": "BURN",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xEF",
+  "bytes": "04 EF",
+  "example_wire": "04 EF 42 FC 7E",
+  "response": "... 6F; host polls with 03 EF while status byte (frame[n-3]) != 1",
+  "source": "TriggerFrameFactory::createBurn @0x0081fd62, SynchronousHandler::createEepromPollRequest @0x00818b14, handleEepromControlResponse @0x008189dc",
+  "area": "core"
+ },
+ {
+  "name": "CHANGE_BAUDRATE",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xFC",
+  "bytes": "[ubrr] FC",
+  "fields": [
+   {
+    "name": "ubrr",
+    "size": 1,
+    "values": {
+     "9600": "0x68",
+     "19200": "0x34",
+     "38400": "0x1A",
+     "57600": "0x10",
+     "115200": "0x08",
+     "other": "1000000/baud-1"
+    }
+   }
+  ],
+  "response": "... 7C at old baud; host then switches port",
+  "source": "TriggerFrameController::changeBaudrate @0x0081bdde, OnTriggerFrameEvent @0x0081d264",
+  "area": "core"
+ },
+ {
+  "name": "TRIGGER_EVENT",
+  "mode": "triggerframe",
+  "direction": "ecu->host",
+  "type": "0x00-0x61 (not 0x20)",
+  "response": "unsolicited; forwarded as event",
+  "source": "TriggerFrameCommunicationController::onReceiveTriggerFrame @0x00819d12",
+  "area": "core"
+ },
+ {
+  "name": "EXIT_TRIGGERFRAME_MODE",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xB1",
+  "bytes": "see megatune section (DeviceModeSelector)",
+  "source": "DeviceModeSelector::<ctor> @0x00df9ee0, Megatune::<ctor> @0x00e3a2d0",
+  "area": "core"
+ },
+ {
+  "name": "MODESEL_MAN_TO_MT",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "62 79 65 2E (\"bye.\")",
+  "fields": [],
+  "response": "none parsed; DeviceDetector re-probe must return MT id",
+  "timeout_ms": "100 settle; 3 retries",
+  "source": "DeviceModeSelector::<ctor> @0x00df9ee0; sendChangeMode @0x00df9730; OnDeviceFound @0x00df8994",
+  "area": "megatune"
+ },
+ {
+  "name": "MODESEL_MAN_TO_BOOT",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "\"cb33cb.\" 63 62 33 33 63 62 2E",
+  "fields": [],
+  "response": "re-probe -> AVR... boot id",
+  "timeout_ms": null,
+  "source": "@0x00df9ee0",
+  "area": "megatune"
+ },
+ {
+  "name": "MODESEL_MT_TO_BOOT",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "\"Mancb33cb.\"",
+  "fields": [],
+  "response": "re-probe -> boot",
+  "timeout_ms": null,
+  "source": "@0x00df9ee0",
+  "area": "megatune"
+ },
+ {
+  "name": "MODESEL_MT_TO_BOOT_ROUNDNEW",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "7F 33 2E",
+  "fields": [
+   "only when isRound && fw.minor>4"
+  ],
+  "response": "re-probe -> boot",
+  "timeout_ms": null,
+  "source": "@0x00df9ee0 else-branch; DeviceModeSelectorHelper::changeDeviceModeTo @0x00a08980",
+  "area": "megatune"
+ },
+ {
+  "name": "MODESEL_MT_TO_MAN",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "\"Man.\" 4D 61 6E 2E",
+  "fields": [],
+  "response": "re-probe -> \"Yes, menu and comm worx\"",
+  "timeout_ms": null,
+  "source": "@0x00df9ee0",
+  "area": "megatune"
+ },
+ {
+  "name": "MODESEL_MT_TO_TF",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "\"Mat\" 4D 61 74",
+  "fields": [],
+  "response": "re-probe -> TF frame type 0x7F",
+  "timeout_ms": null,
+  "source": "@0x00df9ee0; FetchingFirmwareVersion::OnFirmwareVersion @0x00bd5ac2 (fw>=1.1.98)",
+  "area": "megatune"
+ },
+ {
+  "name": "MODESEL_GPSV3_TO_MT",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "0D 0A B1 7F 34 7E",
+  "fields": [
+   "CRLF + TF frame [B1] + CRC16/MODBUS LE (7F 34) + 7E"
+  ],
+  "response": "re-probe -> MT",
+  "timeout_ms": null,
+  "source": "@0x00df9ee0",
+  "area": "megatune"
+ },
+ {
+  "name": "MODESEL_TF_TO_MT",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "B1 7F 34 7E",
+  "fields": [
+   "TF EXIT_TRIGGERFRAME_MODE 0xB1"
+  ],
+  "response": "re-probe -> MT",
+  "timeout_ms": null,
+  "source": "@0x00df9ee0; VemsDeviceController::leaveTFMode @0x00bc864e",
+  "area": "megatune"
+ },
+ {
+  "name": "MODESEL_TF_TO_MAN",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "B1 7F 34 7E 4D 61 6E",
+  "fields": [
+   "TF exit frame + \"Man\""
+  ],
+  "response": "re-probe -> Man",
+  "timeout_ms": null,
+  "source": "@0x00df9ee0",
+  "area": "megatune"
+ },
+ {
+  "name": "MODESEL_TF_TO_BOOT",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "TriggerFrameEx(0xF6,0xFE,-1,NULL,0).getEscapedData()",
+  "fields": [
+   "GO_BOOTLOADER_STUFFED_TYPE_COMMAND; exact bytes Unknown"
+  ],
+  "response": "re-probe -> boot",
+  "timeout_ms": null,
+  "source": "@0x00df9ee0; TriggerFrame::getTypeAsString @0x008192e0",
+  "area": "megatune"
+ },
+ {
+  "name": "MODESEL_BOOT_TO_TF",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "\"EMat\" 45 4D 61 74",
+  "fields": [],
+  "response": "re-probe",
+  "timeout_ms": null,
+  "source": "@0x00df9ee0",
+  "area": "megatune"
+ },
+ {
+  "name": "MODESEL_BOOT_TO_MT",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "\"E.\" 45 2E",
+  "fields": [
+   "selectMegatuneMode2 scans only 19200, 9600"
+  ],
+  "response": "re-probe at 19200/9600; then mcB back to m_baud if it differs",
+  "timeout_ms": null,
+  "source": "@0x00df9ee0; VemsDeviceController::selectMegatuneMode2 @0x00bcbe4e; DeviceModeSelector::OnDeviceFound @0x00df8994",
+  "area": "megatune"
+ },
+ {
+  "name": "MODESEL_BOOT_TO_MAN",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "\"E.Man.\"",
+  "fields": [],
+  "response": "re-probe",
+  "timeout_ms": null,
+  "source": "@0x00df9ee0",
+  "area": "megatune"
+ },
+ {
+  "name": "V3_VERSION_QUERY",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "\"ManmdVbye.\" 4D 61 6E 6D 64 56 62 79 65 2E",
+  "fields": [],
+  "response": "stream containing version D.D.D[D] (FirmwareVersionRecognizer)",
+  "timeout_ms": 500,
+  "source": "V3FirmwareVersionFetcher::write @0x00e40c48; read @0x00e40da0",
+  "area": "megatune"
+ },
+ {
+  "name": "V3_VERSION_REPLY",
+  "mode": "man",
+  "direction": "ecu->host",
+  "bytes": "ASCII \"<d>.<d>.<d>[<d>]\" anywhere in stream",
+  "fields": [
+   "major = last digit before '.'",
+   "minor 1 digit",
+   "patch 1-2 digits"
+  ],
+  "response": null,
+  "timeout_ms": 500,
+  "source": "FirmwareVersionRecognizer::feed @0x00baeaee",
+  "area": "megatune"
+ },
+ {
+  "name": "V3_INFO_STEP0_Man",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "\"Man\" 4D 61 6E",
+  "fields": [
+   "discarded; on timeout step is skipped"
+  ],
+  "response": "8 bytes",
+  "timeout_ms": "~100 polls (~100+ ms); 10 ms between steps",
+  "source": "V3FirmwareInfoFetcher::<ctor> @0x00e2a860; read @0x00e28dc8; write @0x00e28d8c",
+  "area": "megatune"
+ },
+ {
+  "name": "V3_INFO_STEP1_mdv",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "\"mdv\" 6D 64 76",
+  "fields": [
+   "compilationTime"
+  ],
+  "response": "16 bytes",
+  "timeout_ms": "~100 polls (~100+ ms); 10 ms between steps",
+  "source": "V3FirmwareInfoFetcher::<ctor> @0x00e2a860; read @0x00e28dc8; write @0x00e28d8c",
+  "area": "megatune"
+ },
+ {
+  "name": "V3_INFO_STEP2_mdV",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "\"mdV\" 6D 64 56",
+  "fields": [
+   "firmwareVersion"
+  ],
+  "response": "version pattern bytes",
+  "timeout_ms": "~100 polls (~100+ ms); 10 ms between steps",
+  "source": "V3FirmwareInfoFetcher::<ctor> @0x00e2a860; read @0x00e28dc8; write @0x00e28d8c",
+  "area": "megatune"
+ },
+ {
+  "name": "V3_INFO_STEP3_mci",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "\"mci\" 6D 63 69",
+  "fields": [
+   "serialNumber"
+  ],
+  "response": "12 bytes",
+  "timeout_ms": "~100 polls (~100+ ms); 10 ms between steps",
+  "source": "V3FirmwareInfoFetcher::<ctor> @0x00e2a860; read @0x00e28dc8; write @0x00e28d8c",
+  "area": "megatune"
+ },
+ {
+  "name": "V3_INFO_STEP4_bye",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "\"bye\" 62 79 65",
+  "fields": [
+   "discarded"
+  ],
+  "response": "5 bytes",
+  "timeout_ms": "~100 polls (~100+ ms); 10 ms between steps",
+  "source": "V3FirmwareInfoFetcher::<ctor> @0x00e2a860; read @0x00e28dc8; write @0x00e28d8c",
+  "area": "megatune"
+ },
+ {
+  "name": "V3_INFO_STEP5_Q",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "\"Q\" 51",
+  "fields": [
+   "signature e.g. \"VEMS v1.2.34 16x14 kpa=2,2\"; partial accepted on timeout"
+  ],
+  "response": "23..26 (RangeRecognizer) bytes",
+  "timeout_ms": "~100 polls (~100+ ms); 10 ms between steps",
+  "source": "V3FirmwareInfoFetcher::<ctor> @0x00e2a860; read @0x00e28dc8; write @0x00e28d8c",
+  "area": "megatune"
+ },
+ {
+  "name": "V3_INFO_STEP6_S",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "\"S\" 53",
+  "fields": [
+   "firmwareOptions; partial accepted on timeout (may resend)"
+  ],
+  "response": "24..26 (RangeRecognizer) bytes",
+  "timeout_ms": "~100 polls (~100+ ms); 10 ms between steps",
+  "source": "V3FirmwareInfoFetcher::<ctor> @0x00e2a860; read @0x00e28dc8; write @0x00e28d8c",
+  "area": "megatune"
+ },
+ {
+  "name": "ROUND_S",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "\"S.\" 53 2E",
+  "fields": [
+   "Round fmt suffix '.'"
+  ],
+  "response": "exactly 23 bytes, e.g. \"VEMS Round WBO2 v1.5.10\" (>=21 accepted on timeout); version parsed after 'v'",
+  "timeout_ms": "~100 polls",
+  "source": "RoundFirmwareInfoFetcher::sendS @0x00e2bd28; waitS @0x00e2c698",
+  "area": "megatune"
+ },
+ {
+  "name": "ROUND_TRIGGER_MCI",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "80 2E",
+  "fields": [
+   "used when fw.minor>4"
+  ],
+  "response": "12 bytes Round serial",
+  "timeout_ms": "~100 polls",
+  "source": "RoundFirmwareInfoFetcher::sendTriggerMci @0x00e2c2d4; waitTriggerMci @0x00e2c4e8",
+  "area": "megatune"
+ },
+ {
+  "name": "ROUND_MAN",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "\"Man.\" 4D 61 6E 2E",
+  "fields": [
+   "old Round fw (minor<=4)"
+  ],
+  "response": "8 bytes (discarded)",
+  "timeout_ms": "~100 polls",
+  "source": "RoundFirmwareInfoFetcher::sendMan @0x00e2bf0c; waitMan @0x00e2c62c",
+  "area": "megatune"
+ },
+ {
+  "name": "ROUND_MCI",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "\"mci.\" 6D 63 69 2E",
+  "fields": [],
+  "response": "12 bytes Round serial",
+  "timeout_ms": "~100 polls",
+  "source": "RoundFirmwareInfoFetcher::sendManMci @0x00e2c0f0; waitManMci @0x00e2c588",
+  "area": "megatune"
+ },
+ {
+  "name": "ROUND_BYE",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "\"bye\" 62 79 65",
+  "fields": [
+   "sent first if source mode==Man, and after mci"
+  ],
+  "response": "5 bytes",
+  "timeout_ms": "~100 polls; 150 ms quiet between steps",
+  "source": "RoundFirmwareInfoFetcher::sendBye @0x00e2bb44; waitBye @0x00e2c9f0; changeStateToClearing @0x00e2c4c4",
+  "area": "megatune"
+ },
+ {
+  "name": "PW_PROBE",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "2E (\".\")",
+  "fields": [],
+  "response": "protected: \"BAD pw\\r\\n\" + serial matching \\w\\d.\\d_\\w\\d{6}; unprotected: silence (Inferred)",
+  "timeout_ms": "m_timeout",
+  "source": "PasswordChecker::<ctor> @0x00e27c94; sendP @0x00e27f80; waitP @0x00e28a44",
+  "area": "megatune"
+ },
+ {
+  "name": "PW_SEND",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "<password ASCII> 2E",
+  "fields": [
+   "password from findPassword(serial) @0x00e28980"
+  ],
+  "response": "\"pwOK\"",
+  "timeout_ms": "m_timeout",
+  "source": "PasswordChecker::sendPw @0x00e28460; waitPw @0x00e28908",
+  "area": "megatune"
+ },
+ {
+  "name": "BOOT_S",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "53 (\"S\")",
+  "fields": [],
+  "response": "\"AVR\" + dev + bootState + 12-byte serial, or \"AVREFI1\"",
+  "timeout_ms": 1000,
+  "source": "BootStateDetector::write @0x00df5d2c",
+  "area": "megatune"
+ },
+ {
+  "name": "BOOT_REPLY",
+  "mode": "megatune",
+  "direction": "ecu->host",
+  "bytes": "\"AVR\" <dev> <bootState> <serial12>",
+  "fields": [
+   "dev: '3'=V3, '2'=Round, 'E' -> expect \"FI1\"",
+   "bootState: 0x34-0x38,'P','r' stored; 'v' stored and is first serial char; else -1",
+   "serial: V3 regex \\w\\d.\\d_\\w\\d{6} over 12 bytes; Round raw 12 bytes"
+  ],
+  "response": null,
+  "timeout_ms": 1000,
+  "source": "BootStateDetector::read @0x00df8488; waitDevice @0x00df6f44; waitBootState @0x00df6fcc; waitSerialNumber @0x00df705c",
+  "area": "megatune"
+ },
+ {
+  "name": "BOOT_CHKSUM_REQ",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "41 FB 80 44 6C 6C",
+  "fields": [
+   "only after \"AVREFI1\""
+  ],
+  "response": "5 bytes; bytes[1..4] as u32: 0xA05BA125 -> bootState 0x32, 0xFB00FB80 -> 0x33, else -1 (byte order Unknown)",
+  "timeout_ms": 1000,
+  "source": "BootStateDetector::write @0x00df5d2c; waitChkSum @0x00df7e9c",
+  "area": "megatune"
+ },
+ {
+  "name": "MT_RT_REQ_V3",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "44 (\"D\")",
+  "fields": [
+   "cfg[10]"
+  ],
+  "response": "rtSize bytes; rtCrcMode=1: data + CRC16/MODBUS LE over bytes[0..n-3]",
+  "timeout_ms": "m_timeout (re-armed without resend up to cfg[0x23] times)",
+  "source": "VemsDeviceController::initDetectedMegatuneConfig @0x00bcd8a0; Megatune::write @0x00e40bc0; waitRt @0x00e3e120",
+  "area": "megatune"
+ },
+ {
+  "name": "MT_RT_REQ_ROUND",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "41 2E (\"A.\")",
+  "fields": [
+   "cfg[10]"
+  ],
+  "response": "rtSize bytes (no CRC)",
+  "timeout_ms": "m_timeout",
+  "source": "VemsDeviceController::initDetectedMegatuneConfig @0x00bcd8a0",
+  "area": "megatune"
+ },
+ {
+  "name": "MT_RT_REPLY",
+  "mode": "megatune",
+  "direction": "ecu->host",
+  "bytes": "<rt data>[crcLo crcHi] | TF frame type 0x20",
+  "fields": [
+   "rtCrcMode cfg[2]: 0 raw, 1 CRC16 LE trailer (V3 fw>=1.1.75), 2 TF frame",
+   "next request may be pipelined after 33rd byte (<2 outstanding)"
+  ],
+  "response": null,
+  "timeout_ms": "m_timeout",
+  "source": "Megatune::waitRtRead @0x00e3de58; waitRtReadNoCrc @0x00e3c5ec; waitRtReadTriggerFrame @0x00e3c688",
+  "area": "megatune"
+ },
+ {
+  "name": "MT_PAGE_READ",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "<readCmd> [2E if Round]",
+  "fields": [
+   "readCmd: \"0xNN\" -> single byte NN, else ASCII string (e.g. \"h\")"
+  ],
+  "response": "page bytes (+CRC16 LE if pageCrcMode=1, V3 fw>=1.1.86); length = learned size; delimited by silence during sync",
+  "timeout_ms": "m_timeout+200, then up to 3x(m_timeout+50) without resend; sync: m_timeout+128",
+  "source": "SiprDescHelper::getPageReadCommand @0x00bb5308; Megatune::readPage @0x00e3ef80; MegatuneSyncer::write @0x00e2f140",
+  "area": "megatune"
+ },
+ {
+  "name": "MT_PAGE_READ_TF",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "F4 <ecuPageId> [2E]",
+  "fields": [
+   "pageCrcMode=2 only; ecuPageId from INI vt_2_ecu_id"
+  ],
+  "response": "TF frame type 0x74, data = frameLen-5 bytes; frameLen==6 && data[0]==1 -> page doesn't exist",
+  "timeout_ms": "m_timeout+200",
+  "source": "SiprDescHelper::getPageReadCommand @0x00bb5668; Megatune::waitPageTriggerFrame @0x00e3ed70; MegatuneSyncer::waitPageTriggerFrame @0x00e2fc74",
+  "area": "megatune"
+ },
+ {
+  "name": "MT_PAGE_SIZES_CRC_REQ",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "F8",
+  "fields": [
+   "only if cfg[5] (V3 fw>=1.1.89)"
+  ],
+  "response": "TF frame type 0x78: [crcLo,crcHi]*cnt + [size]*cnt, cnt=(frameLen-3)/3, index = ecuPageId; stored size = size+2",
+  "timeout_ms": "m_timeout+250, 3 retries",
+  "source": "MegatuneSyncer::write @0x00e2f140; waitPagesCrcAndSize @0x00e32b80; setPagesSizeAndCrc @0x00e31fbc",
+  "area": "megatune"
+ },
+ {
+  "name": "MT_PAGE_WRITE",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "<W> <offset u8> <value u8> [2E if Round]",
+  "fields": [
+   "W: \"0xNN\" -> NN, else first char of write string (e.g. \"H\")",
+   "one byte per command, no read-back"
+  ],
+  "response": "none",
+  "timeout_ms": "n/a (interWriteDelay returned only in read states)",
+  "source": "Megatune::writePage @0x00e3cd18; WritePageCommand::<ctor> @0x00eca5d8; STDataIOSIPR::write @0x007dd8c2",
+  "area": "megatune"
+ },
+ {
+  "name": "MT_BURN",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "42 [2E if Round]",
+  "fields": [
+   "INI burnCommand \"B\" (SIPRDescriptor+0x50)"
+  ],
+  "response": "none",
+  "timeout_ms": "n/a",
+  "source": "Megatune::burn @0x00e3cba0; STDataIOSIPR::burnData @0x007dd826",
+  "area": "megatune"
+ },
+ {
+  "name": "MT_RAW_OR_STRING_CMD",
+  "mode": "megatune",
+  "direction": "host->ecu",
+  "bytes": "<raw bytes / ASCII string>",
+  "fields": [
+   "StringCommand carries its own delay"
+  ],
+  "response": "ignored for 50 polls",
+  "timeout_ms": "~50 polls",
+  "source": "Megatune::executeRawCommand @0x00e3ad60; executeStringCommand @0x00e3ac7c",
+  "area": "megatune"
+ },
+ {
+  "name": "MAN_BAUD",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "\"mcB%02X\"",
+  "fields": [],
+  "response": "\"OK\\r\\n\" within 100 ms",
+  "timeout_ms": 100,
+  "source": "BaudRateSelector::sendChangeBaudRate @0x00e0f728; TriggerLogReader::sendBaudrateChange @0x00e011ac",
+  "area": "megatune"
+ },
+ {
+  "name": "MAN_TLOG_MXC",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "\"Manmxc\"",
+  "fields": [],
+  "response": "Unknown (outside slice)",
+  "timeout_ms": null,
+  "source": "TriggerLogReader::sendMxc @0x00e00410",
+  "area": "megatune"
+ },
+ {
+  "name": "MAN_TLOG_START",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "\"Manmde40 | mde40\"",
+  "fields": [],
+  "response": "Unknown (outside slice)",
+  "timeout_ms": null,
+  "source": "TriggerLogReader::sendManMde40 @0x00e00638; sendRestart @0x00e007b8; sendStartCmd @0x00e00528",
+  "area": "megatune"
+ },
+ {
+  "name": "MAN_TLOG_STOP",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "\"mde00\"",
+  "fields": [],
+  "response": "Unknown (outside slice)",
+  "timeout_ms": null,
+  "source": "TriggerLogReader::sendStopCmd @0x00e008f0",
+  "area": "megatune"
+ },
+ {
+  "name": "MAN_OFFSET",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "\"mdx\"",
+  "fields": [],
+  "response": "Unknown (outside slice)",
+  "timeout_ms": null,
+  "source": "OffsetReaderClient::sendCommand @0x00e24198",
+  "area": "megatune"
+ },
+ {
+  "name": "MAN_SD_STATUS",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "\"mss\"",
+  "fields": [],
+  "response": "Unknown (outside slice)",
+  "timeout_ms": null,
+  "source": "SDCardV3Logger::sendStatus @0x00e1c84c; sendEraseStatus @0x00e1ce30",
+  "area": "megatune"
+ },
+ {
+  "name": "MAN_SD_START",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "\"msemss\"",
+  "fields": [],
+  "response": "Unknown (outside slice)",
+  "timeout_ms": null,
+  "source": "SDCardV3Logger::sendStart @0x00e1c74c",
+  "area": "megatune"
+ },
+ {
+  "name": "MAN_SD_STOP",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "\"msdmss\"",
+  "fields": [],
+  "response": "Unknown (outside slice)",
+  "timeout_ms": null,
+  "source": "SDCardV3Logger::sendStop @0x00e1c940",
+  "area": "megatune"
+ },
+ {
+  "name": "MAN_SD_ERASE",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "\"msc\"",
+  "fields": [],
+  "response": "Unknown (outside slice)",
+  "timeout_ms": null,
+  "source": "SDCardV3Logger::sendErase @0x00e1e598",
+  "area": "megatune"
+ },
+ {
+  "name": "MAN_SD_DISABLE",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "\"msd\"",
+  "fields": [],
+  "response": "Unknown (outside slice)",
+  "timeout_ms": null,
+  "source": "SDCardFileDownloader::sendDisable @0x00e125d4",
+  "area": "megatune"
+ },
+ {
+  "name": "MAN_SD_GET",
+  "mode": "man",
+  "direction": "host->ecu",
+  "bytes": "\"msg%06x\"",
+  "fields": [],
+  "response": "Unknown (outside slice)",
+  "timeout_ms": null,
+  "source": "SDCardFileSearch::getInode @0x00e0cd44",
+  "area": "megatune"
+ },
+ {
+  "name": "SD_GET_STATUS",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xFA",
+  "subtype": "0x01",
+  "request_layout": "01 FA",
+  "response_type": "0x7A",
+  "response_layout": "[status] 7A (exactly 1 data byte; 00=running, FE/FF=disabled, FC/FD=not running, DD-FB=starting, 08=not started, C1-DC=?, else unknown)",
+  "timeout_ms": 1000,
+  "source": "TriggerFrameSDCardHandler::getStatus @0x00813ba4; handleStatus @0x00813f12; getECUState @0x00814410; doRequest @0x00813ffc (timeout 1000, tryCount 3)",
+  "area": "tf-aux"
+ },
+ {
+  "name": "SD_START_LOG",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xFA",
+  "subtype": "0x02",
+  "request_layout": "02 FA",
+  "response_type": "0x7A",
+  "response_layout": "[any] 7A; host then auto-sends 01 FA",
+  "timeout_ms": 1000,
+  "source": "TriggerFrameSDCardHandler::startLog @0x008137f6; onReceiveTriggerFrame @0x00813064",
+  "area": "tf-aux"
+ },
+ {
+  "name": "SD_STOP_LOG",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xFA",
+  "subtype": "0x03",
+  "request_layout": "03 FA",
+  "response_type": "0x7A",
+  "response_layout": "[any] 7A; host then auto-sends 01 FA",
+  "timeout_ms": 1000,
+  "source": "TriggerFrameSDCardHandler::stopLog @0x00813a6a; onReceiveTriggerFrame @0x00813064",
+  "area": "tf-aux"
+ },
+ {
+  "name": "SD_ERASE",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xFA",
+  "subtype": "0x04",
+  "request_layout": "04 FA",
+  "response_type": "0x7A",
+  "response_layout": "[any] 7A; host then polls 01 FA every 250 ms (<=30) until status FE/FF, then reads block 0 expecting all-0x00/0xFF",
+  "timeout_ms": 1000,
+  "source": "TriggerFrameSDCardHandler::eraseCard @0x00813930; SDCardControllerTF::ResponseToErase @0x007768c6",
+  "area": "tf-aux"
+ },
+ {
+  "name": "SD_GET_BLOCK",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xF3",
+  "subtype": null,
+  "request_layout": "00 b2 b1 b0 F3 (24-bit block number, 4-byte value encoding)",
+  "response_type": "0x73",
+  "response_layout": "sector[512] crcHi crcLo (CRC-16/XMODEM over sector, BE) x x x 73; body length exactly 0x206 (518) excl. frame CRC; last 3 bytes unread (inferred block echo b2 b1 b0)",
+  "timeout_ms": 1000,
+  "source": "TriggerFrameSDCardHandler::getBlock @0x00813cde; handleGetBlock @0x00813e1a; SDCardFile::isCRCValid @0x0077bbcd; Math::crc16 @0x00bf96be",
+  "area": "tf-aux"
+ },
+ {
+  "name": "SD_ERROR",
+  "mode": "triggerframe",
+  "direction": "ecu->host",
+  "type": "0x7F",
+  "subtype": "0x03",
+  "request_layout": "n/a",
+  "response_type": "n/a",
+  "response_layout": "[detail?] 03 7F (SD_BASE); also 01 05 7F / 02 05 7F (SD_CMD NO/BAD_SUBTYPE)",
+  "timeout_ms": null,
+  "source": "TriggerFrameEx::isSDCardErrorType @0x0081f46a; TriggerFrame::getErrorSubTypeAsString @0x008196ca",
+  "area": "tf-aux"
+ },
+ {
+  "name": "EEPROM_CONTROL_POLL",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xEF",
+  "subtype": "0x03",
+  "request_layout": "03 EF",
+  "response_type": "0x6F",
+  "response_layout": "[status] [sub-echo?] 6F; status==1 -> done, else host re-polls indefinitely",
+  "timeout_ms": 1000,
+  "source": "SynchronousHandler::createEepromPollRequest @0x00818b14 (1000 ms, tryCount 1); handleEepromControlResponse @0x008189dc",
+  "area": "tf-aux"
+ },
+ {
+  "name": "EEPROM_CONTROL_BURN",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xEF",
+  "subtype": "0x04",
+  "request_layout": "04 EF",
+  "response_type": "0x6F",
+  "response_layout": "response not awaited; host immediately queues 03 EF poll",
+  "timeout_ms": null,
+  "source": "TriggerFrameFactory::createBurn @0x0081fd62; SynchronousHandler::handleEepromControlRequest @0x008188c4",
+  "area": "tf-aux"
+ },
+ {
+  "name": "EEPROM_CONTROL_LOAD",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xEF",
+  "subtype": "0x01|0x02",
+  "request_layout": "01 EF (ManmcL0mbye) | 02 EF (ManmcL1mbye)",
+  "response_type": "0x6F",
+  "response_layout": "response not awaited; poll 03 EF follows; host emits local SIPR ACK",
+  "timeout_ms": 1000,
+  "source": "VemsCommandTranslator::createTriggerFrame(StringCommand) @0x00823922; TriggerFrameMemoryHandler::request @0x0082180a; FirmwareConfigManager::setLoadCmd",
+  "area": "tf-aux"
+ },
+ {
+  "name": "EEPROM_CONTROL_STORE",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xEF",
+  "subtype": "0x05|0x06",
+  "request_layout": "05 EF (ManmcS0mbye) | 06 EF (ManmcS1mbye)",
+  "response_type": "0x6F",
+  "response_layout": "response not awaited; poll 03 EF follows; host emits local SIPR ACK",
+  "timeout_ms": 1000,
+  "source": "VemsCommandTranslator::createTriggerFrame @0x00823922; FirmwareConfigManager::requestAdvancedBurn",
+  "area": "tf-aux"
+ },
+ {
+  "name": "EEPROM_READ_BLOCK",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xF5",
+  "subtype": null,
+  "request_layout": "[idx] F5 (idx = 16-byte block no; full dump idx=0,15,...,255 = 18 requests)",
+  "response_type": "0x75",
+  "response_layout": "data[240] x y 75 (host strips last 5 of CRC-inclusive frame, expects 240; x y unread); dump truncated to 0x1000",
+  "timeout_ms": 2000,
+  "source": "EepromReaderTFFormat::sendCommand @0x00dfe3fc; waitData @0x00dfe214 (1000 idle polls x 2 ms)",
+  "area": "tf-aux"
+ },
+ {
+  "name": "EEPROM_WRITE_CHUNK",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xF9",
+  "subtype": null,
+  "request_layout": "d[1..16] aH aL F9 (start addr 0, sequential)",
+  "response_type": "0x79",
+  "response_layout": "aH aL k 79 (k = bytes written; host verifies addr and k)",
+  "timeout_ms": 2000,
+  "source": "EepromTriggerFrameController::writeEeprom @0x0080c8e0; TriggerFrameWriterClient::sendDataRaw @0x00dfce94; checkResponseRaw @0x00dfc580",
+  "area": "tf-aux"
+ },
+ {
+  "name": "SRAM_READ",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xF4",
+  "subtype": null,
+  "request_layout": "[len<=0xF0] aH aL F4 (readSRAMAddress uses len=0x10)",
+  "response_type": "0x74",
+  "response_layout": "data[len] aH aL 74",
+  "timeout_ms": 1000,
+  "source": "TriggerFrameReaderClient::sendAddress @0x00dff8b8; waitResponse @0x00dfef5c; TriggerFrameController::readSRAMAddress @0x0081c3fe; TriggerFrameMemoryHandler::request @0x0082180a",
+  "area": "tf-aux"
+ },
+ {
+  "name": "SRAM_WRITE_CHUNK",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xFB",
+  "subtype": null,
+  "request_layout": "d[1..16] aH aL FB (raw mode) | value aH aL FB (multiple mode)",
+  "response_type": "0x7B",
+  "response_layout": "aH aL k 7B (k=1 in multiple mode)",
+  "timeout_ms": 2000,
+  "source": "SRAMTriggerFrameController::create_and_run_client @0x00815108; TriggerFrameWriterClient::sendDataRaw @0x00dfce94; sendDataMultiple @0x00dfd100; checkResponseMultiple @0x00dfc990",
+  "area": "tf-aux"
+ },
+ {
+  "name": "TEST_TOOLS",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xF7",
+  "subtype": "0x01..0x06",
+  "request_layout": "[param] [sub] F7 (sub: 1=h DIGITALOUT, 2=n IGNDWELL, 3=e ENA_FLAGS, 4=d DIS_FLAGS, 5=a FORCE_ADV, 6=i FORCE_IAC)",
+  "response_type": "0x77",
+  "response_layout": "unknown/unparsed; errors [d] 08 7F",
+  "timeout_ms": 1000,
+  "source": "VemsCommandTranslator::createTriggerFrame(StringCommand) @0x00823922; TriggerFrame::getErrorSubTypeAsString @0x008196ca",
+  "area": "tf-aux"
+ },
+ {
+  "name": "TEST_TOOLS_RAW",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xF7",
+  "subtype": "0x07",
+  "request_layout": "[b1] [b2] 07 F7 (from RawCommand 'X' b1 b2; FORCE_GENERAL)",
+  "response_type": "0x77",
+  "response_layout": "unknown/unparsed",
+  "timeout_ms": 1000,
+  "source": "VemsCommandTranslator::createTriggerFrame(RawCommand) @0x008249ca; TriggerFrameController::requestRawCommand @0x0081c7c0",
+  "area": "tf-aux"
+ },
+ {
+  "name": "TRIGGERLOG_ENABLE",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xF7",
+  "subtype": "0x03",
+  "request_layout": "40 03 F7 (sent after setTriggerLogMode(1); bypasses pending tracking)",
+  "response_type": "none",
+  "response_layout": "no response awaited; ECU starts streaming TRIGGER_EVENT frames",
+  "timeout_ms": null,
+  "source": "TriggerLogTFHandler::enableTriggerLog @0x00823504; m_enableBytes @0x010925D4; TriggerFrameCommunicationController::poll @0x0081a394, isTLogRequest @0x0081ad96",
+  "area": "tf-aux"
+ },
+ {
+  "name": "TRIGGERLOG_DISABLE",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xF7",
+  "subtype": "0x03",
+  "request_layout": "00 03 F7 (sent after setTriggerLogMode(0))",
+  "response_type": "0x77",
+  "response_layout": "[any] 77",
+  "timeout_ms": 1000,
+  "source": "TriggerLogTFHandler::disableTriggerLog @0x00823648; m_disableBytes @0x010925D6",
+  "area": "tf-aux"
+ },
+ {
+  "name": "TRIGGERLOG_RESTART_NODATA",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xF7",
+  "subtype": "0x03",
+  "request_layout": "40 03 F7 re-sent after 300 consecutive empty reads; 3x -> TriggerLogNoData",
+  "response_type": "none",
+  "response_layout": "0x77 arriving in tlog mode while flag set -> TriggerLogNoData event",
+  "timeout_ms": null,
+  "source": "TriggerFrameCommunicationClient::read @0x00e27200; TriggerFrameCommunicationController::onTriggerLogNoData @0x0081ae50; onReceiveTriggerFrame @0x00819d12",
+  "area": "tf-aux"
+ },
+ {
+  "name": "TRIGGER_EVENT",
+  "mode": "triggerframe",
+  "direction": "ecu->host",
+  "type": "0x01..0x61 (excl. 0x20)",
+  "subtype": null,
+  "request_layout": "n/a (unsolicited in trigger-log mode)",
+  "response_type": "n/a",
+  "response_layout": "0x01: T1..Tk 01; 0x02-0x1F,0x50-0x57,0x5A-0x61: T1..Tk Eh El type; 0x40-0x4E: T1..Tk d Eh El type; T/E = 16-bit BE ticks of 4 us",
+  "timeout_ms": null,
+  "source": "TriggerFrame::addFrame @0x00818d8a; convertFrame2Time @0x008190e0; TriggerLog::fillTRDataArray @0x0082551e",
+  "area": "tf-aux"
+ },
+ {
+  "name": "GO_BOOTLOADER",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xF6",
+  "subtype": "0xFE",
+  "request_layout": "FE F6 (wire FE F6 C1 96 7E)",
+  "response_type": "none",
+  "response_layout": "no response expected; ECU enters bootloader (EcuMode 0x0B); errors 01 06 7F / 02 06 7F",
+  "timeout_ms": null,
+  "source": "DeviceModeSelector::<ctor> @0x00df9ee0 (ModeSelectCmd 0x12->0x0B)",
+  "area": "tf-aux"
+ },
+ {
+  "name": "CHANGE_BAUDRATE (cross-ref)",
+  "mode": "triggerframe",
+  "direction": "host->ecu",
+  "type": "0xFC",
+  "subtype": null,
+  "request_layout": "[ubrr] FC (9600:68, 19200:34, 38400:1A, 57600:10, 115200:08, else 1e6/baud-1); also from StringCommand mcB<hex>",
+  "response_type": "0x7C",
+  "response_layout": "[any] 7C sent at old baud; used by SD search/resume and trigger-log",
+  "timeout_ms": 1000,
+  "source": "TriggerFrameController::changeBaudrate @0x0081bdde; SDCardControllerTF::resume @0x0077b8f6; TriggerLogControllerTF::changeBaudrate @0x00826f28",
+  "area": "tf-aux"
+ },
+ {
+  "name": "TF_ERROR",
+  "mode": "triggerframe",
+  "direction": "ecu->host",
+  "type": "0x7F",
+  "subtype": null,
+  "request_layout": "n/a",
+  "response_type": "n/a",
+  "response_layout": "[reason] [category] 7F or [category] 7F; code = reason<<8|category; 02 7F = CRC (host resends), 03 7F = SD_BASE",
+  "timeout_ms": null,
+  "source": "TriggerFrameEx::getErrorInfoString @0x0081f238; SynchronousHandler::onReceiveTriggerFrame @0x00817a70",
+  "area": "tf-aux"
+ },
+ {
+  "name": "AIM_RECORD",
+  "mode": "AIM",
+  "direction": "ECU->VemsTune (also VemsTune->AIM device via AIMDetector::write)",
+  "layout": "[channel u8][0xA3][valueHi][valueLo][sum=(b0+b1+b2+b3)&0xFF]",
+  "response": "none (unsolicited stream)",
+  "source": "FSMAIM::feed @0x00d5f854; SIPR2AIMConverter::Convert @0x0047a228; AIMParser::sendChannel @0x00453ffe",
+  "area": "aim-modbus"
+ },
+ {
+  "name": "SIPR_AIM (145) internal/log",
+  "mode": "AIM",
+  "direction": "internal event / log",
+  "layout": "SIPR type 0x91, len 3, payload [channel, valueHi, valueLo] (AIMParser::rx variant: len 0)",
+  "response": "n/a",
+  "source": "AIMDetector::read @0x00e03864; AIMParser::rx @0x00453c8c",
+  "area": "aim-modbus"
+ },
+ {
+  "name": "MODBUS_ASCII_FRAME",
+  "mode": "Modbus",
+  "direction": "both",
+  "layout": "':' + ASCII-hex(%02X) of [devId, func, data..., LRC] + CR LF",
+  "response": "see function rows",
+  "source": "ModbusRequest::createAsciiFrame @0x006c357a; Modbus_ASCII_FSM::parse @0x006c147a",
+  "area": "aim-modbus"
+ },
+ {
+  "name": "MB_READ_HOLDING_REGISTERS (0x03)",
+  "mode": "Modbus",
+  "direction": "VemsTune(master)->device",
+  "layout": "devId 03 addrHi addrLo cntHi cntLo LRC",
+  "response": "devId 03 byteCount reg[BE]... LRC; exception devId 83 code LRC",
+  "source": "ReadHoldingRegistersRequest::addFuncData @0x006c3764; ModbusResponseFactory::createReadHoldingRegistersResponse @0x006c4e6a",
+  "area": "aim-modbus"
+ },
+ {
+  "name": "MB_WRITE_SINGLE_REGISTER (0x06)",
+  "mode": "Modbus",
+  "direction": "VemsTune(master)->device",
+  "layout": "devId 06 addrHi addrLo valHi valLo LRC; addr=(page<<8)|(byteOffset>>1)",
+  "response": "echo; exception 0x86",
+  "source": "WriteSingleRegisterRequest::addFuncData @0x006c384e; VemsModbusClient::requestWritePage @0x00e32f78",
+  "area": "aim-modbus"
+ },
+ {
+  "name": "MB_WRITE_MULTIPLE_REGISTERS (0x10)",
+  "mode": "Modbus",
+  "direction": "VemsTune(master)->device",
+  "layout": "devId 10 addrHi addrLo qtyHi qtyLo byteCount=(qty&0x7F)*2 reg[BE]... LRC",
+  "response": "devId 10 addr qty LRC; exception 0x90",
+  "source": "WriteMultipleRegistersRequest::addFuncData @0x006c3ce2",
+  "area": "aim-modbus"
+ },
+ {
+  "name": "SIPR_MODBUS_READ (200) realtime",
+  "mode": "Modbus",
+  "direction": "internal event / log",
+  "layout": "SIPR type 200, payload [startAddrHi, startAddrLo, reg0Hi, reg0Lo, ...]",
+  "response": "n/a",
+  "source": "VemsModbusClient::handleReadRealtimeReponse @0x00e361e0; sendSiprRealTimePacket @0x00e34688",
+  "area": "aim-modbus"
+ },
+ {
+  "name": "SIPR_MODBUS_READ (200) page",
+  "mode": "Modbus",
+  "direction": "internal event / log",
+  "layout": "SIPR type 200, payload [pageId, 0x00, data...]",
+  "response": "n/a",
+  "source": "VemsModbusClient::sendSiprMemoryReadPacket @0x00e34aa0",
+  "area": "aim-modbus"
+ },
+ {
+  "name": "SIPR_UPDATE_FREQUENCY (148)",
+  "mode": "Modbus",
+  "direction": "internal event",
+  "layout": "SIPR type 0x94, len 4, responses-per-second (byte order unknown)",
+  "response": "n/a",
+  "source": "VemsModbusClient::sendUpdateFrequencyPacket @0x00e34868",
+  "area": "aim-modbus"
+ },
+ {
+  "name": "MDX_COMMAND",
+  "mode": "MAN/console (offset reader)",
+  "direction": "VemsTune->ECU",
+  "layout": "ASCII 'mdx' + hexAddress (terminator unknown)",
+  "response": "32 raw bytes, or 32 + crc16_sipr(LE) when CRC flag set",
+  "source": "OffsetReaderClient::sendCommand @0x00e24198; getResponse @0x00e2432c",
+  "area": "aim-modbus"
+ },
+ {
+  "name": "SIPR_READ_MEMORY_32 (65) from MDX",
+  "mode": "MAN/console",
+  "direction": "internal event / log",
+  "layout": "SIPR type 0x41, len 36, [addr32 BE = hex2int(addr)<<4] + 32 data bytes",
+  "response": "n/a",
+  "source": "OffsetReaderClient::createSipr @0x00e25408",
+  "area": "aim-modbus"
+ },
+ {
+  "name": "SIPR_MDX_FRAMES_END (149)",
+  "mode": "MAN/console",
+  "direction": "internal event / log",
+  "layout": "SIPR type 0x95, len 0; emitted when address list wraps (full pass done)",
+  "response": "n/a",
+  "source": "OffsetReaderClient::createSipr @0x00e25408",
+  "area": "aim-modbus"
+ },
+ {
+  "name": "TCP_DATA_IAC_ESCAPE",
+  "mode": "TCP",
+  "direction": "VemsTune->server (server->VemsTune filtered by ReducedTelnetFsm)",
+  "layout": "SIPR stream unchanged except each 0xFF sent as FF FF; chunks <=0x200",
+  "response": "same SIPR replies; incoming IAC sequences stripped",
+  "source": "RemoteSerialPort::SendString @0x0048627a; Read @0x004863fa",
+  "area": "aim-modbus"
+ },
+ {
+  "name": "TCP_RFC2217_SET_BAUDRATE",
+  "mode": "TCP",
+  "direction": "VemsTune->server",
+  "layout": "FF FB 2C FF FA 2C 01 <baud u32 BE> FF F0 (baud in 4800/9600/19200/38400/57600/115200 else 19200)",
+  "response": "optional RFC2217 reply (IAC SB 2C 65 baud IAC SE) consumed by ReducedTelnetFsm (inferred)",
+  "source": "RemoteSerialPort::setBaudRate @0x004864da; template @0x010a0e3c",
+  "area": "aim-modbus"
+ }
+]

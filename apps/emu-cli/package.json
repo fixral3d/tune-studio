@@ -1,0 +1,12 @@
+{
+  "name": "@vems/emu-cli",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "bin": {
+    "vems-emu": "src/emu.mjs"
+  },
+  "dependencies": {
+    "serialport": "^13.0.0"
+  }
+}
