@@ -51,9 +51,10 @@ pwsh tools/flash.ps1        # build → 1200-baud touch → esptool on the ROM p
 - If Windows still shows the old JTAG device after flashing, replug the USB cable once.
 
 ## Ports
-Two USB serial ports:
-- **MI_00 (e.g. COM12):** the ECU port. Use it in VemsTune / the app, at any baud rate.
-- **MI_02 (e.g. COM13):** the debug trace, showing what the host sends and what the simulator answers:
+- **ECU port (e.g. COM12):** the only port by default. Use it in VemsTune / the app, at any baud rate.
+- **Debug trace port (opt-in):** build with `-DSIM_DEBUG_PORT` (add it to `build_flags`) for a second port, MI_02
+  (e.g. COM13), that shows what the host sends and what the simulator answers. It is off by default, because two
+  identically named ports confuse port pickers.
   ```
   cp tools/trace.mjs ../../apps/emu-cli/trace.tmp.mjs; node ../../apps/emu-cli/trace.tmp.mjs COM13
   ```

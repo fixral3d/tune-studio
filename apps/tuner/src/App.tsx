@@ -157,6 +157,7 @@ export default function App() {
           const d: Device = { client, transport: t, stop: () => { client.stop(); void t.close(); } };
           setDevice(d);
           setDetails(details);
+          setErr(''); // drop a banner left over from an earlier failed attempt
           return;
         } catch {
           client.stop(); // wrong baud / no reply — detach and try the next

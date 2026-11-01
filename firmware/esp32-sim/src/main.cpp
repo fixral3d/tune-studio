@@ -23,13 +23,19 @@
 Ecu ecu;
 Engine engine;
 USBCDC cdc(0);
-USBCDC dbg(1);  // second port: trace of what the host sends (node tools/trace.mjs COMx)
+#ifdef SIM_DEBUG_PORT
+// second port (build with -DSIM_DEBUG_PORT): trace of what the host sends (node tools/trace.mjs COMx).
+// Off by default: two identically named ports confuse port pickers (WebSerial, VemsTune).
+USBCDC dbg(1);
 
 static void dbgLine(const char *s) {
   if (!dbg) return;
   dbg.write((const uint8_t *)s, strlen(s));
   dbg.write((const uint8_t *)"\r\n", 2);
 }
+#else
+static void dbgLine(const char *) {}
+#endif
 
 static void usbWrite(const uint8_t *d, size_t n) {
   if (!tud_ready()) return;
@@ -77,7 +83,9 @@ void setup() {
   cdc.setRxBufferSize(4096);
   cdc.onEvent(usbEvent);
   cdc.begin(115200);
+#ifdef SIM_DEBUG_PORT
   dbg.begin(115200);
+#endif
   USB.VID(0x303a);
   USB.PID(0x81b3);
   USB.manufacturerName("VEMS Tuner");
@@ -86,7 +94,9 @@ void setup() {
   USB.begin();
   LittleFS.begin(true);
   ecu.begin(usbWrite);
+#ifdef SIM_DEBUG_PORT
   ecu.trace = dbgLine;
+#endif
   uiBegin(ecu, engine);
 }
 
