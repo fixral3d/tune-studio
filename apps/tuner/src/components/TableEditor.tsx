@@ -622,7 +622,7 @@ export function TablesPanel({
       </div>
       {table &&
         (compare ? (
-          <TableCompare3D key={table.id3d} client={client} config={config} table={table} sipr={sipr} firmware={firmware} />
+          <TableCompare3D key={table.id3d} client={client} config={config} table={table} sipr={sipr} firmware={firmware} shared={feed instanceof RealtimeFeed ? feed.pages : undefined} />
         ) : (
           <TableEditor key={table.id3d} client={client} config={config} table={table} feed={feed} />
         ))}

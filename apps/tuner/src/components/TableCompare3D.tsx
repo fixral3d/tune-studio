@@ -50,14 +50,23 @@ async function loadSource(
   z: ArrayField,
   xf?: ArrayField,
   yf?: ArrayField,
+  shared?: Map<number, Uint8Array>,
 ): Promise<Loaded> {
   const fields = [z, xf, yf].filter((f): f is ArrayField => !!f);
   const pages = new Map<number, Uint8Array>(); // by INI page
   let label: string;
   if (src.kind === 'ecu') {
+    // prefer the shared page copy read once at connect (RealtimeFeed.pages); only read from the ECU if it is
+    // missing, so this doesn't race the realtime poll loop over WebSerial (that caused "Load from VT" timeouts)
     for (const f of fields) {
+      if (pages.has(f.page)) continue;
+      const fromShared = shared?.get(f.page);
+      if (fromShared) {
+        pages.set(f.page, fromShared);
+        continue;
+      }
       const id = ecuIdForField(config, f);
-      if (id !== undefined && !pages.has(f.page)) pages.set(f.page, await client.readPage(id));
+      if (id !== undefined) pages.set(f.page, await client.readPage(id));
     }
     label = 'ECU';
   } else {
@@ -97,6 +106,7 @@ function useSource(
     z?: ArrayField;
     xf?: ArrayField;
     yf?: ArrayField;
+    shared?: Map<number, Uint8Array>;
     reload: number;
   },
 ): [Loaded | undefined, string | undefined] {
@@ -107,13 +117,13 @@ function useSource(
     setErr(undefined);
     if (!c.z) return;
     let alive = true;
-    loadSource(src, c.client, c.config, c.sipr, c.z, c.xf, c.yf)
+    loadSource(src, c.client, c.config, c.sipr, c.z, c.xf, c.yf, c.shared)
       .then((l) => alive && setLoaded(l))
       .catch((e) => alive && setErr((e as Error).message));
     return () => {
       alive = false;
     };
-  }, [src, c.client, c.config, c.sipr, c.z, c.xf, c.yf, c.reload]);
+  }, [src, c.client, c.config, c.sipr, c.z, c.xf, c.yf, c.shared, c.reload]);
   return [loaded, err];
 }
 
@@ -176,12 +186,15 @@ export function TableCompare3D({
   table,
   sipr,
   firmware,
+  shared,
 }: {
   client: VemsClient;
   config: VemsConfig;
   table: TableDesc;
   sipr?: SiprDescriptor;
   firmware?: string;
+  /** config pages read once at connect (RealtimeFeed.pages); the ECU source uses these */
+  shared?: Map<number, Uint8Array>;
 }) {
   const z = table.zSym ? (config.byName.get(table.zSym) as ArrayField | undefined) : undefined;
   const xf = table.xSym ? (config.byName.get(table.xSym) as ArrayField | undefined) : undefined;
@@ -205,7 +218,7 @@ export function TableCompare3D({
       .catch(() => setVersions(['1.2.34']));
   }, [firmware]);
 
-  const ctx = { client, config, sipr, z, xf, yf, reload };
+  const ctx = { client, config, sipr, z, xf, yf, shared, reload };
   const [a, errA] = useSource(srcA, ctx);
   const [b, errB] = useSource(srcB, ctx);
 

@@ -258,6 +258,39 @@ export function FirmwarePanel({
         <span className="muted">.hex / .uhex / .chex — çevrimdışı inceleme; bağlıysa ECU'ya yükleme</span>
       </div>
 
+      <details className="fw-guide">
+        <summary>Yükleme rehberi — ilk gerçek ECU denemesi</summary>
+        <ol>
+          <li>
+            <b>Önce yedek ECU'da dene.</b> İlk denemeyi çalışan/canlı beyinde değil, yedek bir beyinde yap. Yükleme
+            yarıda kesilirse beyin bootloader'da kalır (tuğla olmaz, tekrar yüklenir), yine de riski yedekte tut.
+          </li>
+          <li>
+            <b>Config'i yedekle.</b> Tune ekranından mevcut config'i <span className="mono">.vemscfg</span> olarak kaydet.
+            Firmware sonrası kalibrasyonları geri yüklemek için şart. (Aşağıdaki “Sihirbaz” bunu otomatik yapar.)
+          </li>
+          <li>
+            <b>Güvenli koşullar.</b> Motor kapalı, kontak açık, besleme gerilimi stabil. Zayıf güç, en sık yükleme
+            hatası sebebidir.
+          </li>
+          <li>
+            <b>Dosya tipi.</b> <span className="mono">.uhex</span>'i olduğu gibi yükle — gerçek bootloader kendi
+            anahtarıyla içeride çözer. Düz <span className="mono">.hex</span> varsa o da olur. Checksum “geçti” olmalı.
+          </li>
+          <li>
+            <b>Yüklerken bağlantıyı kesme.</b> İlerleme sırasında kabloyu/USB'yi çıkarma, sayfayı kapatma.
+          </li>
+          <li>
+            <b>Doğrula ve config'i geri yükle.</b> “firmware is identical” bekle; sonra yedeklediğin config'i yükle.
+            Farklı sürümse taşıma (migrate) tune'u aktarır, beyin kendi kalibrasyonunu korur.
+          </li>
+          <li>
+            <b>Hata olursa panik yok.</b> Beyin bootloader'da bekler; yüklemeyi tekrarla. “Sihirbaz”, yedek→yükle→taşı
+            adımlarını tek akışta yapar.
+          </li>
+        </ol>
+      </details>
+
       <label className="dropzone">
         <input
           type="file"

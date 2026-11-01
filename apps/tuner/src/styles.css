@@ -587,3 +587,10 @@ label.button-like {
 .tc-grid td.same { opacity: .45; }
 .tc-grid td.on { outline-color: #fff; }
 .tc-cell { margin-top: 6px; color: var(--muted); }
+
+/* firmware upload guide (FirmwarePanel) */
+.fw-guide { margin: 10px 0; border: 1px solid var(--line); border-radius: 8px; background: #0b1018; }
+.fw-guide > summary { cursor: pointer; padding: 10px 12px; color: var(--accent2); font-weight: 600; }
+.fw-guide[open] > summary { border-bottom: 1px solid var(--line); }
+.fw-guide ol { margin: 10px 0; padding: 0 18px 4px 32px; display: grid; gap: 8px; }
+.fw-guide li { color: var(--text); font-size: 13px; line-height: 1.5; }
