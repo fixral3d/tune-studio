@@ -103,12 +103,14 @@ export function Splash({
   onDemo,
   onSerial,
   onOpen,
+  onGuide,
 }: {
   ready: boolean;
   stats?: { constants: number; channels: number; tables: number; menus: number };
   onDemo(): void;
   onSerial(): void;
   onOpen(tab: 'firmware' | 'datalog'): void;
+  onGuide(): void;
 }) {
   return (
     <div className="splash">
@@ -140,6 +142,9 @@ export function Splash({
           </button>
         </div>
         <div className="splash-links">
+          <button className="scard-guide" onClick={onGuide}>
+            ? Nasıl kullanılır — kullanım rehberi
+          </button>
           <button className="ghost" onClick={() => onOpen('datalog')}>
             Datalog aç (.vemslog)
           </button>

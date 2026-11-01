@@ -26,6 +26,7 @@ import { ReplayBar } from './components/ReplayBar';
 import type { ReplayFeed } from './lib/replay';
 import { LiveChips, NAV, NavRail, type Tab } from './components/Shell';
 import { Splash } from './components/Splash';
+import { Guide, guideSeen } from './components/Guide';
 import { CommandPalette, type Command } from './components/CommandPalette';
 
 export default function App() {
@@ -182,6 +183,7 @@ export default function App() {
 
   // ── shell: splash, command palette, shortcuts ─────────────────────────
   const [splash, setSplash] = useState(true);
+  const [guide, setGuide] = useState(() => !guideSeen()); // first visit → onboarding wizard
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [tableReq, setTableReq] = useState<{ id: string; compare?: boolean }>();
   const [curveReq, setCurveReq] = useState<{ id: string }>();
@@ -426,12 +428,14 @@ export default function App() {
           }
           onDemo={connectDemo}
           onSerial={connectSerial}
+          onGuide={() => setGuide(true)}
           onOpen={(t) => {
             setSplash(false);
             setTab(t);
           }}
         />
       )}
+      {guide && showSplash && <Guide onClose={() => setGuide(false)} onDemo={() => { setGuide(false); void connectDemo(); }} />}
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} commands={commands} />
     </div>
   );

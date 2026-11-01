@@ -373,6 +373,55 @@ button.scard.primary { background: rgba(16, 22, 32, .78); color: var(--text); fo
 .splash-links { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .splash-stats { display: flex; gap: 26px; margin-top: 18px; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
 .splash-stats b { display: block; font-size: 24px; color: var(--text); letter-spacing: 0; }
+.scard-guide {
+  background: rgba(62, 230, 193, .1); border: 1px solid rgba(62, 230, 193, .45); color: var(--accent);
+  padding: 7px 14px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer;
+}
+.scard-guide:hover { background: rgba(62, 230, 193, .18); }
+
+/* ── usage guide (onboarding wizard) ─────────────────────────────── */
+.guide {
+  position: fixed; inset: 0; z-index: 70; display: flex; align-items: center; justify-content: center;
+  padding: 24px; background: rgba(2, 4, 8, .62); backdrop-filter: blur(6px); animation: rise .18s ease-out;
+}
+.guide-card {
+  display: flex; flex-direction: column; width: min(680px, 100%); max-height: 86vh;
+  background: #0b1018; border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .6);
+}
+.guide-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 10px; }
+.guide-dots { display: flex; gap: 8px; padding: 0 20px 14px; }
+.guide-dot { flex: 1; height: 4px; border-radius: 3px; border: 0; background: rgba(255, 255, 255, .1); cursor: pointer; padding: 0; }
+.guide-dot.on { background: var(--accent); }
+.guide-dot.done { background: rgba(62, 230, 193, .45); }
+.guide-body { padding: 4px 24px 8px; overflow-y: auto; }
+.guide-body h2 { margin: 0 0 12px; font-size: 20px; }
+.guide-body p { color: #b7c4d4; line-height: 1.6; margin: 0 0 12px; }
+.guide-ul, .guide-warn, .guide-flow { margin: 0 0 12px; padding-left: 20px; display: grid; gap: 10px; }
+.guide-ul li, .guide-warn li { color: #b7c4d4; line-height: 1.55; }
+.guide-warn li::marker { color: var(--hot); }
+.guide-flow li { color: #b7c4d4; line-height: 1.5; }
+.guide-flow li b { color: var(--text); }
+.guide-note { font-size: 13px; padding: 10px 12px; border-radius: 8px; background: rgba(255, 255, 255, .04); }
+.guide-note.warn { background: rgba(255, 95, 210, .1); border: 1px solid rgba(255, 95, 210, .3); color: #ffd1ef; }
+.guide-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.guide-box { padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255, 255, 255, .02); }
+.guide-box b { display: block; margin-bottom: 4px; }
+.guide-box p { margin: 0; }
+.guide-feat { display: grid; gap: 4px; }
+.guide-feat-row { display: flex; gap: 12px; padding: 8px; border-radius: 8px; }
+.guide-feat-row:hover { background: rgba(255, 255, 255, .03); }
+.guide-feat-ico { flex: none; width: 34px; height: 34px; color: var(--accent); }
+.guide-feat-ico svg { width: 22px; height: 22px; margin: 6px; }
+.guide-feat-row p { margin: 2px 0 0; }
+.guide-keys { display: grid; gap: 8px; margin-bottom: 14px; }
+.guide-keys > div { color: #b7c4d4; font-size: 14px; }
+.kbd-inline {
+  display: inline-block; padding: 1px 8px; margin-right: 8px; border-radius: 5px; font-size: 12px; font-weight: 600;
+  background: rgba(255, 255, 255, .08); border: 1px solid var(--line); color: var(--text);
+}
+.guide-foot { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-top: 1px solid var(--line); }
+.guide-foot-btns { display: flex; gap: 8px; }
 
 /* ── command palette ─────────────────────────────────────────────── */
 .cmd-veil {
