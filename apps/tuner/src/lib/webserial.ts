@@ -20,8 +20,9 @@ export class WebSerialTransport implements SerialTransport {
     await this.openPort(baud);
   }
 
-  /** Reopen the already-selected port at a new baud (used for baud auto-detect). */
-  async reopen(baud: number): Promise<void> {
+  /** Reopen the already-selected port (optionally at a new baud; used for baud auto-detect and to
+   *  re-acquire a device that dropped + re-enumerated its USB, e.g. after a firmware flash). */
+  async reopen(baud: number = this.baudRate): Promise<void> {
     if (!this.port) throw new Error('port not selected');
     await this.closePort();
     await this.openPort(baud);

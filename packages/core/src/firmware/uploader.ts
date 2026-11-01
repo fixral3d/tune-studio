@@ -117,29 +117,38 @@ export async function uploadFirmware(
     throw new Error(`page 0x${p.index.toString(16)} not acknowledged`);
   };
 
-  try {
-    // enter bootloader
+  // Enter (or re-sync with) the bootloader. Real VemsTune re-sends TF GO_BOOTLOADER + the
+  // detection probe before EACH phase — marker, main upload, verify (BOOTLOADER.md §9). An ECU
+  // already in boot ignores FE F6 and still answers 'S', so this is safe to repeat; skipping it
+  // only worked against our lenient emulator. Returns the 12-char serial from the "AVR3" reply.
+  const enterBoot = async (): Promise<string> => {
     progress({ phase: 'enter', page: 0, total: pages.length });
     if (opts.fromTriggerFrame ?? true) {
       await t.write(encodeTfBody(Uint8Array.of(0xfe, 0xf6)));
       await sleep(30);
     }
-    let serial: string | undefined;
-    for (let i = 0; i < 10 && !serial; i++) {
+    for (let i = 0; i < 10; i++) {
       rx.clear();
-      await send([0x53]); // 'S'
+      await send([0x53, 0x6d, 0x78, 0x63, 0x2e, 0xff, 0x7e]); // VemsTune's probe "Smxc.\xFF~" — leading 'S'
       const id = await rx.read(16, timeout + 256);
       const s = id && String.fromCharCode(...id);
-      if (s?.startsWith('AVR3')) serial = s.slice(4);
+      if (s?.startsWith('AVR3')) {
+        await sleep(50);
+        rx.clear();
+        return s.slice(4);
+      }
     }
-    if (!serial) throw new Error('bootloader not found (no "AVR3" reply)');
-    await sleep(50);
-    rx.clear();
+    throw new Error('bootloader not found (no "AVR3" reply)');
+  };
+
+  try {
+    const serial = await enterBoot();
 
     if (crypto) {
       if (opts.marker) {
         progress({ phase: 'marker', page: 0, total: opts.marker.pages.length });
         for (const p of opts.marker.pages) await writePage(p, true);
+        await enterBoot(); // VemsTune re-enters between the marker phase and the main upload
       }
     } else {
       progress({ phase: 'erase', page: 0, total: pages.length });
@@ -155,6 +164,7 @@ export async function uploadFirmware(
 
     const mismatches: number[] = [];
     if (opts.verify ?? true) {
+      await enterBoot(); // VemsTune re-enters before the verify pass
       n = 0;
       const op = crypto ? 0x43 : 0x6c; // 'CC' / 'll'
       for (const p of pages) {

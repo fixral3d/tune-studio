@@ -26,6 +26,39 @@ const two = (n: number) => String(n).padStart(2, '0');
 const stamp = (d = new Date()) =>
   `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())} ${two(d.getHours())}:${two(d.getMinutes())}:${two(d.getSeconds())}`;
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Re-read ECU details after a flash. The "E." leave command reboots the application, so the ECU is
+ * silent for a while before it answers TF again (VemsTune re-probes too) — hence the retries. Some
+ * ECUs, notably the ESP32 sim, also drop + re-enumerate their USB on bootloader exit, which kills
+ * the open port's read stream; reopening the same port re-acquires it. A couple of plain retries
+ * run first: a real ECU on an FTDI/UART cable just needs the reboot time, and reopening it early
+ * would needlessly toggle DTR.
+ */
+async function redetect(device: Device, attempts = 10): Promise<FirmwareDetails> {
+  const transport = device.transport as Device['transport'] & { reopen?: (b?: number) => Promise<void> };
+  let last: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await device.client.readDetails();
+    } catch (e) {
+      last = e;
+      // Plain retries first (a rebooting ECU on an FTDI/UART cable just needs a few seconds and its
+      // port survives). Only after that fall back to reopening — for a device that dropped its USB.
+      if (i >= 3 && transport.reopen) {
+        try {
+          await transport.reopen();
+        } catch {
+          /* keep trying */
+        }
+      }
+      await sleep(800);
+    }
+  }
+  throw last instanceof Error ? last : new Error('ECU yeniden bağlanmadı (timeout)');
+}
+
 /** .vemscfg header lines, matching TunePanel / RawLogHelper::getVemsCfgHeader. */
 function vemscfgHeader(d?: FirmwareDetails) {
   const raw = d?.serialNumber ? [...d.serialNumber].map((c) => c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0') + ' ').join('') : '';
@@ -66,12 +99,14 @@ export function FirmwarePanel({
   config,
   sipr,
   details,
+  onDetails,
 }: {
   device?: Device;
   feed?: RealtimeFeed;
   config?: VemsConfig;
   sipr?: SiprDescriptor;
   details?: FirmwareDetails;
+  onDetails?: (d: FirmwareDetails) => void;
 }) {
   const [img, setImg] = useState<FirmwareImage>();
   const [name, setName] = useState('');
@@ -137,6 +172,7 @@ export function FirmwarePanel({
     } finally {
       device.client.start();
       feed?.start();
+      try { onDetails?.(await redetect(device)); } catch { /* keep connect-time details */ }
       setBusy(false);
     }
   }
@@ -188,10 +224,11 @@ export function FirmwarePanel({
       }
       set('flash', 'ok', `${up.pagesWritten} sayfa, firmware aynı`);
 
-      // 3. re-detect firmware on the now-rebooted ECU
+      // 3. re-detect firmware on the now-rebooted ECU (retries while it reboots)
       set('detect', 'run');
-      const nd = await client.readDetails();
+      const nd = await redetect(device);
       const newVer = nd.version ?? '';
+      onDetails?.(nd);
       set('detect', 'ok', `ECU: ${nd.serialNumber ?? '?'} · fw ${newVer || '?'}`);
 
       // 4+. config restore is only safe when the firmware version is unchanged: the app's loaded

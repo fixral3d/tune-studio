@@ -59,13 +59,6 @@ int Ecu::fwPageCount() const {
   return n;
 }
 
-void Ecu::saveFirmware() {
-  if (!fw) return;
-  File f = LittleFS.open("/firmware.bin", "w");
-  if (!f) return;
-  f.write((uint8_t *)fw, FW_PAGES * sizeof(FwPage));
-  f.close();
-}
 
 void Ecu::loadFirmware() {
   if (!fw) return;
@@ -225,7 +218,11 @@ static size_t triggerFrame(uint8_t type, const uint16_t *prim, int k, int event,
 void Ecu::tick() {
   if (burnPending_) {
     burnPending_ = false;
-    savePages();
+    // RAM-only: a LittleFS write here stalls the TinyUSB task (flash cache off) long enough that the
+    // CDC drops + re-enumerates, closing the host's port mid-session (same cause as the 'E' firmware
+    // save). Burn is already ACKed and the values stay in RAM, so the tuner round-trips correctly;
+    // they just don't survive an ESP32 power cycle (boot reloads the seed), which is fine for a sim.
+    // A real ECU persists on burn over its own flash without touching the separate USB-serial link.
   }
   if (triggerOn && millis() - trigLastMs_ >= 20) triggerStep();
 }
@@ -296,11 +293,11 @@ void Ecu::bootByte(uint8_t b) {
       case 'e':
         if (fw) memset(fw, 0, FW_PAGES * sizeof(FwPage));
         return ack();
-      case 'E':  // leave boot mode
-        inBoot = false;
-        parser_.reset();
-        saveFirmware();
-        return;
+      case 'E':  // leave boot mode → resume TF immediately (like a real ECU's app restart).
+        inBoot = false;   // Firmware pages live in PSRAM only; persisting them to LittleFS here (even
+        parser_.reset();  // chunked) stalls the USB task enough that the CDC drops + re-enumerates,
+        return;           // which closes the host's port and makes the post-flash detect fail.
+                          // (Verified on real HW: with the save removed the port stays open.)
       case 'A':
       case 'D':
         cmd_[cmdLen_++] = b;

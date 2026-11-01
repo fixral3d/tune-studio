@@ -392,7 +392,7 @@ export default function App() {
           {tab === 'tune' && device && config && (
             <TunePanel client={device.client} config={config} firmware={details?.version} sipr={sipr} details={details} />
           )}
-          {tab === 'firmware' && <FirmwarePanel device={device} feed={feed} config={config} sipr={sipr} details={details} />}
+          {tab === 'firmware' && <FirmwarePanel device={device} feed={feed} config={config} sipr={sipr} details={details} onDetails={setDetails} />}
           {tab === 'trigger' && <TriggerLogPanel device={device} feed={feed} details={details} />}
 
           {!enabled(tab) && config && (

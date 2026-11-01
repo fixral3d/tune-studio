@@ -56,8 +56,7 @@ class Ecu {
   void loadPages();  // flash (LittleFS) or seed
   void savePages();
   void resetPagesToSeed();
-  void saveFirmware();
-  void loadFirmware();
+  void loadFirmware();  // firmware pages are not persisted on bootloader exit (see ecu.cpp 'E')
 
  private:
   void handle(const uint8_t *b, size_t n);
