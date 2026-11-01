@@ -18,7 +18,7 @@ import type { Device } from '../lib/device';
 import type { RealtimeFeed } from '../lib/realtime';
 
 function download(bytes: Uint8Array | string, name: string) {
-  const url = URL.createObjectURL(new Blob([bytes], { type: 'application/octet-stream' }));
+  const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type: 'application/octet-stream' }));
   const a = document.createElement('a');
   a.href = url;
   a.download = name;
